@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useState } from 'react';
-import { toast } from '@/components/toast';
 import { ArrowLeft } from 'lucide-react';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
 
-import { login, type LoginActionState } from '../actions';
+import { register, type RegisterActionState } from '../actions';
+import { toast } from '@/components/toast';
 import { useSession } from 'next-auth/react';
 
 export default function Page() {
@@ -18,8 +18,8 @@ export default function Page() {
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
 
-  const [state, formAction] = useActionState<LoginActionState, FormData>(
-    login,
+  const [state, formAction] = useActionState<RegisterActionState, FormData>(
+    register,
     {
       status: 'idle',
     },
@@ -28,22 +28,23 @@ export default function Page() {
   const { update: updateSession } = useSession();
 
   useEffect(() => {
-    if (state.status === 'failed') {
-      toast({
-        type: 'error',
-        description: 'Invalid credentials!',
-      });
+    if (state.status === 'user_exists') {
+      toast({ type: 'error', description: 'Account already exists!' });
+    } else if (state.status === 'failed') {
+      toast({ type: 'error', description: 'Failed to create account!' });
     } else if (state.status === 'invalid_data') {
       toast({
         type: 'error',
         description: 'Failed validating your submission!',
       });
     } else if (state.status === 'success') {
+      toast({ type: 'success', description: 'Account created successfully!' });
+
       setIsSuccessful(true);
       updateSession();
       router.refresh();
     }
-  }, [state.status]);
+  }, [state]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);
@@ -61,22 +62,22 @@ export default function Page() {
         <span className="text-sm font-medium">Back</span>
       </button>
 
-      <div className="w-full max-w-md overflow-hidden rounded-2xl flex flex-col gap-12">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl gap-12 flex flex-col">
         {/* Welcome Section */}
         <div className="flex flex-col items-center justify-center gap-4 px-4 text-center sm:px-16">
           <div className="mb-2">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
-              Welcome Back! 👋
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent dark:from-emerald-400 dark:to-blue-400">
+              Hello There! ✨
             </h2>
           </div>
-          <h3 className="text-xl font-semibold dark:text-zinc-50">Jump Back In</h3>
+          <h3 className="text-xl font-semibold dark:text-zinc-50">We Can't Wait to See You Join Us</h3>
           <p className="text-sm text-gray-500 dark:text-zinc-400">
-            Ready to continue your journey? Sign in to your account
+            Create your account and become part of our amazing community
           </p>
         </div>
         
         <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
           
           {/* Terms and Privacy Policy */}
           <p className="text-center text-xs text-gray-500 dark:text-zinc-500 mt-4 leading-relaxed">
@@ -97,16 +98,16 @@ export default function Page() {
             .
           </p>
           
-          {/* Sign up link */}
+          {/* Sign in link */}
           <p className="text-center text-sm text-gray-600 mt-6 dark:text-zinc-400">
-            {"Don't have an account? "}
+            {'Already have an account? '}
             <Link
-              href="/register"
+              href="/login"
               className="font-semibold text-gray-800 hover:underline dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              Sign up
+              Sign in
             </Link>
-            {' for free.'}
+            {' instead.'}
           </p>
         </AuthForm>
       </div>
