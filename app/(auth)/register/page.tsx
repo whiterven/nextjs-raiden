@@ -44,7 +44,7 @@ export default function Page() {
       updateSession();
       router.refresh();
     }
-  }, [state]);
+  }, [state, updateSession, router]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);
@@ -58,19 +58,14 @@ export default function Page() {
         onClick={() => router.back()}
         className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-200 hover:scale-105 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white group"
       >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+        <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
         <span className="text-sm font-medium">Back</span>
       </button>
 
       <div className="w-full max-w-md overflow-hidden rounded-2xl gap-12 flex flex-col">
         {/* Welcome Section */}
         <div className="flex flex-col items-center justify-center gap-4 px-4 text-center sm:px-16">
-          <div className="mb-2">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent dark:from-emerald-400 dark:to-blue-400">
-              Hello There! ✨
-            </h2>
-          </div>
-          <h3 className="text-xl font-semibold dark:text-zinc-50">We Can't Wait to See You Join Us</h3>
+          <h3 className="text-xl font-semibold dark:text-zinc-50">We Can&apos;t Wait to See You Join Us</h3>
           <p className="text-sm text-gray-500 dark:text-zinc-400">
             Create your account and become part of our amazing community
           </p>
@@ -100,14 +95,14 @@ export default function Page() {
           
           {/* Sign in link */}
           <p className="text-center text-sm text-gray-600 mt-6 dark:text-zinc-400">
-            {'Already have an account? '}
+            {&apos;Already have an account? &apos;}
             <Link
               href="/login"
               className="font-semibold text-gray-800 hover:underline dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               Sign in
             </Link>
-            {' instead.'}
+            {&apos; instead.&apos;}
           </p>
         </AuthForm>
       </div>
