@@ -76,14 +76,14 @@ export default function Page() {
           
           {/* Terms and Privacy Policy */}
           <p className="text-center text-xs text-gray-500 dark:text-zinc-500 mt-4 leading-relaxed">
-            By clicking continue, you agree to our{' '}
+            By clicking continue, you agree to our{" "}
             <Link
               href="/terms"
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 hover:underline-offset-4 transition-all"
             >
               Terms of Service
             </Link>
-            {' and '}
+            {" and "}
             <Link
               href="/privacy"
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline underline-offset-2 hover:underline-offset-4 transition-all"
@@ -95,14 +95,14 @@ export default function Page() {
           
           {/* Sign in link */}
           <p className="text-center text-sm text-gray-600 mt-6 dark:text-zinc-400">
-            {&apos;Already have an account? &apos;}
+            {"Already have an account? "}
             <Link
               href="/login"
               className="font-semibold text-gray-800 hover:underline dark:text-zinc-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               Sign in
             </Link>
-            {&apos; instead.&apos;}
+            {" instead."}
           </p>
         </AuthForm>
       </div>

@@ -22,20 +22,6 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
     maxMessagesPerDay: 50,
     availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
   },
-
   /*
-   * For users with a pro subscription
-   */
-//   pro: {
-//     maxMessagesPerDay: 500,
-//     availableChatModelIds: ['chat-model', 'chat-model-reasoning', 'llama-scout', 'qwen-qwq'],
-//   },
-
-//   /*
-//    * For users with a premium subscription
-//    */
-//   premium: {
-//     maxMessagesPerDay: 2000,
-//     availableChatModelIds: ['chat-model', 'chat-model-reasoning', 'llama-scout', 'qwen-qwq', 'deepseek-r1'],
-//   },
-// };
+   * For users with a pro account
+   */}
