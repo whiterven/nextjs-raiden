@@ -53,6 +53,12 @@ export default function Page() {
     <div className="flex h-dvh w-screen items-start pt-12 md:pt-0 md:items-center justify-center bg-background">
       <div className="w-full max-w-md overflow-hidden rounded-2xl flex flex-col gap-12">
         <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
+          <button
+            onClick={() => router.back()}
+            className="self-start text-gray-600 hover:underline dark:text-zinc-400"
+          >
+            Back
+          </button>
           <h3 className="text-xl font-semibold dark:text-zinc-50">Sign In</h3>
           <p className="text-sm text-gray-500 dark:text-zinc-400">
             Use your email and password to sign in
@@ -69,6 +75,23 @@ export default function Page() {
               Sign up
             </Link>
             {' for free.'}
+          </p>
+          <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
+            By clicking Log In, you agree to our{' '}
+            <Link
+              href="/terms"
+              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+            >
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link
+              href="/privacy"
+              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+            >
+              Privacy Policy
+            </Link>
+            .
           </p>
         </AuthForm>
       </div>
