@@ -12,42 +12,18 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    */
   guest: {
     maxMessagesPerDay: 20,
-    availableChatModelIds: [
-      'chat-model',
-      'chat-model-reasoning',
-      'deepseek-r1-distill-llama-70b',
-      'meta-llama/llama-4-scout-17b-16e-instruct',
-      'gemini-2.5-flash-preview-04-17',
-    ],
+    availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
   },
 
   /*
-   * For users with a free account
+   * For users with an account
    */
   regular: {
-    maxMessagesPerDay: 50,
-    availableChatModelIds: [
-      'chat-model',
-      'chat-model-reasoning',
-      'deepseek-r1-distill-llama-70b',
-      'meta-llama/llama-4-scout-17b-16e-instruct',
-      'gemini-2.5-flash-preview-04-17',
-    ],
+    maxMessagesPerDay: 100,
+    availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
   },
 
   /*
-   * For users with a pro subscription
+   * TODO: For users with an account and a paid membership
    */
-//   pro: {
-//     maxMessagesPerDay: 500,
-//     availableChatModelIds: ['chat-model', 'chat-model-reasoning', 'llama-scout', 'qwen-qwq'],
-//   },
-
-//   /*
-//    * For users with a premium subscription
-//    */
-//   premium: {
-//     maxMessagesPerDay: 2000,
-//     availableChatModelIds: ['chat-model', 'chat-model-reasoning', 'llama-scout', 'qwen-qwq', 'deepseek-r1'],
-//   },
 };
