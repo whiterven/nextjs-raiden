@@ -17,4 +17,19 @@ export const chatModels: Array<ChatModel> = [
     name: 'Reasoning model',
     description: 'Uses advanced reasoning',
   },
+  {
+    id: 'llama-scout',
+    name: 'Llama Scout',
+    description: 'Fast and efficient general-purpose model',
+  },
+  {
+    id: 'qwen-qwq',
+    name: 'Qwen QWQ',
+    description: 'Advanced reasoning capabilities with 32B parameters',
+  },
+  {
+    id: 'deepseek-r1',
+    name: 'DeepSeek R1',
+    description: 'Distilled reasoning model with high efficiency',
+  },
 ];
