@@ -66,7 +66,19 @@ function getStreamContext() {
 const reasoningModels = [
   'chat-model-reasoning',
   'groq-deepseek-r1',
-  'groq-qwen-qwq'
+  'groq-qwen-qwq',
+  'gemini-2-5-pro-preview',
+  'gemini-2-5-flash-preview',
+  'gemini-2-5-pro-exp',
+  'claude-4-opus',
+  'claude-4-sonnet',
+  'claude-3-7-sonnet',
+  'openai-o4-mini',
+  'openai-o3',
+  'openai-o3-mini',
+  'openai-o1',
+  'openai-o1-mini',
+  'openai-o1-preview',
 ];
 
 export async function POST(request: Request) {
@@ -166,14 +178,13 @@ export async function POST(request: Request) {
           messages,
           maxSteps: 5,
           experimental_activeTools:
-            reasoningModels.includes(selectedChatModel)
-              ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
+            // ALL models now have access to artifacts and tools
+            [
+              'getWeather',
+              'createDocument',
+              'updateDocument',
+              'requestSuggestions',
+            ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
           tools: {
