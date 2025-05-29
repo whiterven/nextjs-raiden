@@ -1,3 +1,4 @@
+//lib/ai/entitlements.ts
 import type { UserType } from '@/app/(auth)/auth';
 import type { ChatModel } from './models';
 
@@ -12,7 +13,11 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    */
   guest: {
     maxMessagesPerDay: 20,
-    availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
+    availableChatModelIds: [
+      'chat-model', 
+      'chat-model-reasoning',
+      'groq-llama-scout'
+    ],
   },
 
   /*
@@ -20,7 +25,13 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    */
   regular: {
     maxMessagesPerDay: 100,
-    availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
+    availableChatModelIds: [
+      'chat-model', 
+      'chat-model-reasoning',
+      'groq-llama-scout',
+      'groq-deepseek-r1',
+      'groq-qwen-qwq'
+    ],
   },
 
   /*

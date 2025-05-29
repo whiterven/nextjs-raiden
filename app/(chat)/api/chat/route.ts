@@ -1,3 +1,4 @@
+//app/(chat)/api/chat/route.ts
 import {
   appendClientMessage,
   appendResponseMessages,
@@ -61,6 +62,13 @@ function getStreamContext() {
   return globalStreamContext;
 }
 
+// Models that have reasoning capabilities
+const reasoningModels = [
+  'chat-model-reasoning',
+  'groq-deepseek-r1',
+  'groq-qwen-qwq'
+];
+
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
 
@@ -82,6 +90,12 @@ export async function POST(request: Request) {
     }
 
     const userType: UserType = session.user.type;
+
+    // Check if user has access to the selected model
+    const availableModels = entitlementsByUserType[userType].availableChatModelIds;
+    if (!availableModels.includes(selectedChatModel)) {
+      return new ChatSDKError('forbidden:chat').toResponse();
+    }
 
     const messageCount = await getMessageCountByUserId({
       id: session.user.id,
@@ -152,7 +166,7 @@ export async function POST(request: Request) {
           messages,
           maxSteps: 5,
           experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
+            reasoningModels.includes(selectedChatModel)
               ? []
               : [
                   'getWeather',

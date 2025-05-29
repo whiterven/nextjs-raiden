@@ -1,3 +1,4 @@
+//app/(chat)/api/chat/schema.ts
 import { z } from 'zod';
 
 const textPartSchema = z.object({
@@ -23,7 +24,13 @@ export const postRequestBodySchema = z.object({
       )
       .optional(),
   }),
-  selectedChatModel: z.enum(['chat-model', 'chat-model-reasoning']),
+  selectedChatModel: z.enum([
+    'chat-model', 
+    'chat-model-reasoning',
+    'groq-llama-scout',
+    'groq-deepseek-r1',
+    'groq-qwen-qwq'
+  ]),
   selectedVisibilityType: z.enum(['public', 'private']),
 });
 
