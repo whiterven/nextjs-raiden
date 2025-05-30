@@ -17,6 +17,16 @@ export interface LoginActionState {
   status: 'idle' | 'in_progress' | 'success' | 'failed' | 'invalid_data';
 }
 
+export interface RegisterActionState {
+  status:
+    | 'idle'
+    | 'in_progress'
+    | 'success'
+    | 'failed'
+    | 'invalid_data'
+    | 'user_exists';
+}
+
 export const login = async (
   _: LoginActionState,
   formData: FormData,
@@ -25,33 +35,28 @@ export const login = async (
     const validatedData = authFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
     });
 
-    await signIn('credentials', {
+    const signInResult = await signIn('credentials', {
       email: validatedData.email,
       password: validatedData.password,
       redirect: false,
     });
+
+    if (signInResult?.error) {
+      return { status: 'failed' };
+    }
 
     return { status: 'success' };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }
-
     return { status: 'failed' };
   }
 };
-
-export interface RegisterActionState {
-  status:
-    | 'idle'
-    | 'in_progress'
-    | 'success'
-    | 'failed'
-    | 'user_exists'
-    | 'invalid_data';
-}
 
 export const register = async (
   _: RegisterActionState,
@@ -114,3 +119,13 @@ export const register = async (
     return { status: 'failed' };
   }
 };
+
+export async function getUserByEmail(email: string) {
+  try {
+    const [user] = await getUser(email);
+    return user;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
+}

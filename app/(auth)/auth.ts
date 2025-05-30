@@ -13,6 +13,8 @@ declare module 'next-auth' {
     user: {
       id: string;
       type: UserType;
+      firstName?: string;
+      lastName?: string;
     } & DefaultSession['user'];
   }
 
@@ -20,6 +22,8 @@ declare module 'next-auth' {
     id?: string;
     email?: string | null;
     type: UserType;
+    firstName?: string;
+    lastName?: string;
   }
 }
 
@@ -27,6 +31,8 @@ declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     id: string;
     type: UserType;
+    firstName?: string;
+    lastName?: string;
   }
 }
 
@@ -59,7 +65,13 @@ export const {
 
         if (!passwordsMatch) return null;
 
-        return { ...user, type: 'regular' };
+        return {
+          id: user.id,
+          email: user.email,
+          type: 'regular' as const,
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined
+        };
       },
     }),
     Credentials({
@@ -67,7 +79,13 @@ export const {
       credentials: {},
       async authorize() {
         const [guestUser] = await createGuestUser();
-        return { ...guestUser, type: 'guest' };
+        return {
+          id: guestUser.id,
+          email: guestUser.email,
+          type: 'guest' as const,
+          firstName: undefined,
+          lastName: undefined
+        };
       },
     }),
   ],
@@ -76,6 +94,8 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
       }
 
       return token;
@@ -84,6 +104,8 @@ export const {
       if (session.user) {
         session.user.id = token.id;
         session.user.type = token.type;
+        session.user.firstName = token.firstName;
+        session.user.lastName = token.lastName;
       }
 
       return session;

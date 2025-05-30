@@ -1,6 +1,26 @@
+'use client';
+
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { guestRegex } from '@/lib/constants';
+import { getUserByEmail } from '@/app/(auth)/actions';
 
 export const Greeting = () => {
+  const { data: session } = useSession();
+  const isGuest = guestRegex.test(session?.user?.email ?? '');
+  const [dbUser, setDbUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      if (session?.user?.email) {
+        const userData = await getUserByEmail(session.user.email);
+        setDbUser(userData);
+      }
+    }
+    fetchUser();
+  }, [session?.user?.email]);
+
   return (
     <div
       key="overview"
@@ -13,7 +33,7 @@ export const Greeting = () => {
         transition={{ delay: 0.5 }}
         className="text-2xl font-semibold"
       >
-        Hello there!
+        {!isGuest && dbUser?.firstName ? `Hello, ${dbUser.firstName}!` : 'Hello there!'}
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
