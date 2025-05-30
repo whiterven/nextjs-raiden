@@ -34,18 +34,31 @@ import { generateHashedPassword } from './utils';
 import type { VisibilityType } from '@/components/visibility-selector';
 import { ChatSDKError } from '../errors';
 
-// Optionally, if not using email/pass login, you can
-// use the Drizzle adapter for Auth.js / NextAuth
-// https://authjs.dev/reference/adapter/drizzle
+// Ensure we're using the correct connection string
+const connectionString = process.env.POSTGRES_URL;
+if (!connectionString) {
+  throw new Error('POSTGRES_URL is not defined');
+}
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+// Create a new connection for queries
+const queryClient = postgres(connectionString);
+const db = drizzle(queryClient);
 
 export async function getUser(email: string): Promise<Array<User>> {
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    const users = await db
+      .select({
+        id: user.id,
+        email: user.email,
+        password: user.password,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null
+      })
+      .from(user)
+      .where(eq(user.email, email));
+    return users;
   } catch (error) {
+    console.error('Database error in getUser:', error);
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get user by email',
@@ -53,12 +66,25 @@ export async function getUser(email: string): Promise<Array<User>> {
   }
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(email: string, password: string, firstName: string, lastName: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
-    return await db.insert(user).values({ email, password: hashedPassword });
+    const result = await db.insert(user).values({
+      email,
+      password: hashedPassword,
+      firstName: firstName || null,
+      lastName: lastName || null
+    }).returning({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName
+    });
+    
+    return result;
   } catch (error) {
+    console.error('Database error in createUser:', error);
     throw new ChatSDKError('bad_request:database', 'Failed to create user');
   }
 }
@@ -68,11 +94,17 @@ export async function createGuestUser() {
   const password = generateHashedPassword(generateUUID());
 
   try {
-    return await db.insert(user).values({ email, password }).returning({
-      id: user.id,
-      email: user.email,
-    });
+    return await db
+      .insert(user)
+      .values({
+        email,
+        password,
+        firstName: 'Guest',
+        lastName: 'User'
+      })
+      .returning();
   } catch (error) {
+    console.error('Database error in createGuestUser:', error);
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to create guest user',

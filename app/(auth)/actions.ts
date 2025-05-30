@@ -9,6 +9,8 @@ import { signIn } from './auth';
 const authFormSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
 });
 
 export interface LoginActionState {
@@ -59,26 +61,56 @@ export const register = async (
     const validatedData = authFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
     });
 
-    const [user] = await getUser(validatedData.email);
+    let existingUser;
+    try {
+      [existingUser] = await getUser(validatedData.email);
+    } catch (error) {
+      console.error('Error checking existing user:', error);
+      return { status: 'failed' };
+    }
 
-    if (user) {
+    if (existingUser) {
       return { status: 'user_exists' } as RegisterActionState;
     }
-    await createUser(validatedData.email, validatedData.password);
-    await signIn('credentials', {
-      email: validatedData.email,
-      password: validatedData.password,
-      redirect: false,
-    });
 
-    return { status: 'success' };
+    try {
+      const newUser = await createUser(
+        validatedData.email,
+        validatedData.password,
+        validatedData.firstName,
+        validatedData.lastName
+      );
+
+      if (!newUser || newUser.length === 0) {
+        console.error('User creation failed - no user returned');
+        return { status: 'failed' };
+      }
+
+      const signInResult = await signIn('credentials', {
+        email: validatedData.email,
+        password: validatedData.password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        console.error('Sign in failed after user creation:', signInResult.error);
+        return { status: 'failed' };
+      }
+
+      return { status: 'success' };
+    } catch (error) {
+      console.error('Error during user creation or sign in:', error);
+      return { status: 'failed' };
+    }
   } catch (error) {
+    console.error('Registration error:', error);
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }
-
     return { status: 'failed' };
   }
 };
