@@ -1,6 +1,6 @@
 {
-  "name": "ai-chatmesh",
-  "version": "3.0.23",
+  "name": "bineai",
+  "version": "6.4.4",
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",

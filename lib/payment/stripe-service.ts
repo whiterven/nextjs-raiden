@@ -8,17 +8,17 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
 });
 
 export const PLAN_PRICES = {
-  regular: { price_id: env.STRIPE_REGULAR_PRICE_ID, amount: 0 },
   advanced: { price_id: env.STRIPE_ADVANCED_PRICE_ID, amount: 1900 }, // $19.00
   expert: { price_id: env.STRIPE_EXPERT_PRICE_ID, amount: 4100 }, // $41.00
 } as const;
 
 export type PlanType = keyof typeof PLAN_PRICES;
+export type PaidPlanType = PlanType; // For clarity when using paid plans only
 
 interface CreateCheckoutSessionParams {
   userId: string;
   email: string;
-  planType: Exclude<PlanType, 'regular'>;
+  planType: PlanType;
   returnUrl: string;
   cancelUrl: string;
 }
