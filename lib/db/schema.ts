@@ -175,3 +175,47 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+export const subscription = pgTable('Subscription', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  plan: varchar('plan', { enum: ['regular', 'advanced', 'expert'] }).notNull().default('regular'),
+  status: varchar('status', { enum: ['active', 'canceled', 'expired'] }).notNull().default('active'),
+  startDate: timestamp('startDate').notNull().defaultNow(),
+  endDate: timestamp('endDate'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export type Subscription = InferSelectModel<typeof subscription>;
+
+export const payment = pgTable('Payment', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  subscriptionId: uuid('subscriptionId')
+    .notNull()
+    .references(() => subscription.id),
+  amount: varchar('amount', { length: 10 }).notNull(),
+  currency: varchar('currency', { length: 3 }).notNull().default('USD'),
+  status: varchar('status', { enum: ['succeeded', 'failed', 'pending'] }).notNull(),
+  paymentMethod: varchar('paymentMethod', { length: 50 }).notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
+export type Payment = InferSelectModel<typeof payment>;
+
+export const usage = pgTable('Usage', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  messageCount: json('messageCount').notNull().default({}),
+  modelUsage: json('modelUsage').notNull().default({}),
+  date: timestamp('date').notNull().defaultNow(),
+});
+
+export type Usage = InferSelectModel<typeof usage>;

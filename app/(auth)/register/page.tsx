@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useRef } from 'react';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
+  const hasShownSuccess = useRef(false);
 
   const [state, formAction] = useActionState<RegisterActionState, FormData>(
     register,
@@ -35,7 +36,8 @@ export default function RegisterPage() {
         type: 'error',
         description: 'Failed validating your submission!',
       });
-    } else if (state.status === 'success') {
+    } else if (state.status === 'success' && !hasShownSuccess.current) {
+      hasShownSuccess.current = true;
       toast({ type: 'success', description: 'Account created successfully!' });
       setIsSuccessful(true);
       updateSession();

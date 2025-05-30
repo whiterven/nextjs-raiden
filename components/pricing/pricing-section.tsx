@@ -6,8 +6,8 @@ const tiers = [
   {
     name: "Regular",
     emoji: "🟢",
-    price: "Free",
-    billing: "Forever",
+    price: "$0",
+    billing: "/month",
     description: "For casual users and AI explorers.",
     features: [
       "5 free messages per day",

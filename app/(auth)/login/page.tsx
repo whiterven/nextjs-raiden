@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useRef } from 'react';
 import { toast } from '@/components/toast';
 
 import { AuthForm } from '@/components/auth-form';
@@ -17,6 +17,7 @@ export default function Page() {
 
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
+  const hasShownMessage = useRef(false);
 
   const [state, formAction] = useActionState<LoginActionState, FormData>(
     login,
@@ -28,24 +29,30 @@ export default function Page() {
   const { update: updateSession } = useSession();
 
   useEffect(() => {
-    if (state.status === 'failed') {
-      toast({
-        type: 'error',
-        description: 'Invalid credentials!',
-      });
-    } else if (state.status === 'invalid_data') {
-      toast({
-        type: 'error',
-        description: 'Failed validating your submission!',
-      });
-    } else if (state.status === 'success') {
-      setIsSuccessful(true);
-      updateSession();
-      router.refresh();
+    if (!hasShownMessage.current) {
+      if (state.status === 'failed') {
+        hasShownMessage.current = true;
+        toast({
+          type: 'error',
+          description: 'Invalid credentials!',
+        });
+      } else if (state.status === 'invalid_data') {
+        hasShownMessage.current = true;
+        toast({
+          type: 'error',
+          description: 'Failed validating your submission!',
+        });
+      } else if (state.status === 'success') {
+        hasShownMessage.current = true;
+        setIsSuccessful(true);
+        updateSession();
+        router.refresh();
+      }
     }
   }, [state.status, router, updateSession]);
 
   const handleSubmit = (formData: FormData) => {
+    hasShownMessage.current = false;
     setEmail(formData.get('email') as string);
     formAction(formData);
   };
