@@ -30,7 +30,7 @@ export default async function BillingPage() {
         {/* Back Button */}
         <div className="flex items-center">
           <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link href="/chat">
+            <Link href="/">
               <ChevronLeft className="size-4" />
               Back to Chat
             </Link>
