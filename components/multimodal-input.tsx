@@ -69,14 +69,16 @@ function PureMultimodalInput({
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
+      const maxHeight = width && width > 768 ? 200 : 150;
+      const newHeight = Math.min(textareaRef.current.scrollHeight + 2, maxHeight);
+      textareaRef.current.style.height = `${newHeight}px`;
     }
   };
 
   const resetHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
+      textareaRef.current.style.height = width && width > 768 ? '48px' : '36px';
     }
   };
 
@@ -269,7 +271,9 @@ function PureMultimodalInput({
         value={input}
         onChange={handleInput}
         className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+          'min-h-[24px] max-h-[200px] md:max-h-[200px] max-h-[150px] resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700 text-sm md:text-base',
+          'scrollbar-hide hover:scrollbar-default transition-all',
+          input.split('\n').length > 4 && 'scrollbar-default',
           className,
         )}
         rows={2}
