@@ -33,11 +33,37 @@ CREATE TABLE IF NOT EXISTS "Message" (
 	"createdAt" timestamp NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "payment" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" uuid NOT NULL,
+	"amount" integer NOT NULL,
+	"currency" text DEFAULT 'usd' NOT NULL,
+	"status" text NOT NULL,
+	"payment_method" text NOT NULL,
+	"payment_method_details" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"stripe_payment_intent_id" text,
+	"stripe_invoice_id" text
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Stream" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"chatId" uuid NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	CONSTRAINT "Stream_id_pk" PRIMARY KEY("id")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "Subscription" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"userId" uuid NOT NULL,
+	"plan" varchar DEFAULT 'regular' NOT NULL,
+	"status" varchar DEFAULT 'active' NOT NULL,
+	"startDate" timestamp DEFAULT now() NOT NULL,
+	"endDate" timestamp,
+	"stripeCustomerId" varchar(255),
+	"stripeSubscriptionId" varchar(255),
+	"createdAt" timestamp DEFAULT now() NOT NULL,
+	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Suggestion" (
@@ -53,17 +79,28 @@ CREATE TABLE IF NOT EXISTS "Suggestion" (
 	CONSTRAINT "Suggestion_id_pk" PRIMARY KEY("id")
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "Usage" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"userId" uuid NOT NULL,
+	"messageCount" json DEFAULT '{}'::json NOT NULL,
+	"modelUsage" json DEFAULT '{}'::json NOT NULL,
+	"date" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "User" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" varchar(64) NOT NULL,
 	"password" varchar(64),
 	"firstName" varchar(64),
 	"lastName" varchar(64),
+	"type" varchar DEFAULT 'regular' NOT NULL,
 	"language" varchar(2) DEFAULT 'en',
 	"communicationEmails" boolean DEFAULT true,
 	"marketingEmails" boolean DEFAULT false,
 	"socialEmails" boolean DEFAULT false,
-	"securityEmails" boolean DEFAULT true
+	"securityEmails" boolean DEFAULT true,
+	"createdAt" timestamp DEFAULT now() NOT NULL,
+	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Vote_v2" (
@@ -105,7 +142,19 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "payment" ADD CONSTRAINT "payment_user_id_User_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "Stream" ADD CONSTRAINT "Stream_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -118,6 +167,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "Suggestion" ADD CONSTRAINT "Suggestion_documentId_documentCreatedAt_Document_id_createdAt_fk" FOREIGN KEY ("documentId","documentCreatedAt") REFERENCES "public"."Document"("id","createdAt") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Usage" ADD CONSTRAINT "Usage_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

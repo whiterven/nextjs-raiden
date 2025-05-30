@@ -9,6 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  integer,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -17,11 +18,14 @@ export const user = pgTable('User', {
   password: varchar('password', { length: 64 }),
   firstName: varchar('firstName', { length: 64 }),
   lastName: varchar('lastName', { length: 64 }),
+  type: varchar('type', { enum: ['guest', 'regular', 'advanced', 'expert'] }).notNull().default('regular'),
   language: varchar('language', { length: 2 }).default('en'),
   communicationEmails: boolean('communicationEmails').default(true),
   marketingEmails: boolean('marketingEmails').default(false),
   socialEmails: boolean('socialEmails').default(false),
   securityEmails: boolean('securityEmails').default(true),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 });
 
 export type User = InferSelectModel<typeof user>;
@@ -185,28 +189,28 @@ export const subscription = pgTable('Subscription', {
   status: varchar('status', { enum: ['active', 'canceled', 'expired'] }).notNull().default('active'),
   startDate: timestamp('startDate').notNull().defaultNow(),
   endDate: timestamp('endDate'),
+  stripeCustomerId: varchar('stripeCustomerId', { length: 255 }),
+  stripeSubscriptionId: varchar('stripeSubscriptionId', { length: 255 }),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 });
 
 export type Subscription = InferSelectModel<typeof subscription>;
 
-export const payment = pgTable('Payment', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  userId: uuid('userId')
-    .notNull()
-    .references(() => user.id),
-  subscriptionId: uuid('subscriptionId')
-    .notNull()
-    .references(() => subscription.id),
-  amount: varchar('amount', { length: 10 }).notNull(),
-  currency: varchar('currency', { length: 3 }).notNull().default('USD'),
-  status: varchar('status', { enum: ['succeeded', 'failed', 'pending'] }).notNull(),
-  paymentMethod: varchar('paymentMethod', { length: 50 }).notNull(),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
+export const payment = pgTable('payment', {
+  id: text('id').primaryKey(),
+  userId: uuid('user_id').notNull().references(() => user.id),
+  amount: integer('amount').notNull(), // Amount in cents
+  currency: text('currency').notNull().default('usd'),
+  status: text('status').notNull(),
+  paymentMethod: text('payment_method').notNull(),
+  paymentMethodDetails: text('payment_method_details').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  stripePaymentIntentId: text('stripe_payment_intent_id'),
+  stripeInvoiceId: text('stripe_invoice_id'),
 });
 
-export type Payment = InferSelectModel<typeof payment>;
+export type Payment = typeof payment.$inferSelect;
 
 export const usage = pgTable('Usage', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),

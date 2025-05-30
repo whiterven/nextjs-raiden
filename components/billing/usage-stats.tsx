@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -12,24 +13,67 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-export function UsageStats() {
-  // This would come from your database
-  const dailyUsage = [
-    { date: '04/01', messages: 45, models: 3 },
-    { date: '04/02', messages: 52, models: 4 },
-    { date: '04/03', messages: 38, models: 2 },
-    { date: '04/04', messages: 65, models: 5 },
-    { date: '04/05', messages: 41, models: 3 },
-    { date: '04/06', messages: 58, models: 4 },
-    { date: '04/07', messages: 71, models: 6 },
-  ];
+interface UsageData {
+  date: string;
+  messages: number;
+  models: number;
+}
 
-  const monthlyUsage = [
-    { date: 'Jan', messages: 1250, models: 12 },
-    { date: 'Feb', messages: 1480, models: 15 },
-    { date: 'Mar', messages: 1620, models: 18 },
-    { date: 'Apr', messages: 1100, models: 14 },
-  ];
+interface UsageStatsProps {
+  userId: string;
+}
+
+export function UsageStats({ userId }: UsageStatsProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [dailyUsage, setDailyUsage] = useState<UsageData[]>([]);
+  const [monthlyUsage, setMonthlyUsage] = useState<UsageData[]>([]);
+
+  useEffect(() => {
+    async function fetchUsageData() {
+      try {
+        // In a real app, you would fetch this data from your API
+        // For now, using mock data
+        const mockDailyUsage = [
+          { date: '04/01', messages: 45, models: 3 },
+          { date: '04/02', messages: 52, models: 4 },
+          { date: '04/03', messages: 38, models: 2 },
+          { date: '04/04', messages: 65, models: 5 },
+          { date: '04/05', messages: 41, models: 3 },
+          { date: '04/06', messages: 58, models: 4 },
+          { date: '04/07', messages: 71, models: 6 },
+        ];
+
+        const mockMonthlyUsage = [
+          { date: 'Jan', messages: 1250, models: 12 },
+          { date: 'Feb', messages: 1480, models: 15 },
+          { date: 'Mar', messages: 1620, models: 18 },
+          { date: 'Apr', messages: 1100, models: 14 },
+        ];
+
+        setDailyUsage(mockDailyUsage);
+        setMonthlyUsage(mockMonthlyUsage);
+      } catch (error) {
+        console.error('Failed to fetch usage data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (userId) {
+      fetchUsageData();
+    }
+  }, [userId]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage Statistics</CardTitle>
+          <CardDescription>Loading usage data...</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card>

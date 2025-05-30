@@ -27,6 +27,7 @@ import {
   type DBMessage,
   type Chat,
   stream,
+  payment,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
@@ -57,7 +58,10 @@ export async function getUser(email: string): Promise<Array<User>> {
         communicationEmails: user.communicationEmails ?? null,
         marketingEmails: user.marketingEmails ?? null,
         socialEmails: user.socialEmails ?? null,
-        securityEmails: user.securityEmails ?? null
+        securityEmails: user.securityEmails ?? null,
+        type: user.type,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
       })
       .from(user)
       .where(eq(user.email, email));
@@ -570,6 +574,45 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get stream ids by chat id',
+    );
+  }
+}
+
+export async function getPaymentsByUserId({
+  userId,
+  page = 1,
+  limit = 10,
+}: {
+  userId: string;
+  page?: number;
+  limit?: number;
+}) {
+  try {
+    const offset = (page - 1) * limit;
+
+    const payments = await db
+      .select()
+      .from(payment)
+      .where(eq(payment.userId, userId))
+      .orderBy(desc(payment.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    const totalCount = await db
+      .select({ value: count() })
+      .from(payment)
+      .where(eq(payment.userId, userId));
+
+    return {
+      payments,
+      totalPages: Math.ceil(Number(totalCount[0].value) / limit),
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error('Database error in getPaymentsByUserId:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get payments by user id',
     );
   }
 }

@@ -9,27 +9,59 @@ interface Entitlements {
 
 export const entitlementsByUserType: Record<UserType, Entitlements> = {
   /*
-   * For users without an account
+   * For users without an account (Guest)
    */
   guest: {
-    maxMessagesPerDay: 20,
+    maxMessagesPerDay: 5,
     availableChatModelIds: [
-      'chat-model', 
+      'chat-model',
+      'groq-deepseek-r1',
       'chat-model-reasoning',
-      'groq-llama-scout',
-      'gemini-2-0-flash',
-      'claude-3-5-sonnet',
     ],
   },
 
   /*
-   * For users with an account
+   * For users with a free account (Regular)
    */
   regular: {
+    maxMessagesPerDay: 5,
+    availableChatModelIds: [
+      // Basic Models
+      'chat-model',
+      'groq-deepseek-r1',
+      'chat-model-reasoning',
+    ],
+  },
+
+  /*
+   * For users with Advanced plan ($19/month)
+   */
+  advanced: {
     maxMessagesPerDay: 100,
     availableChatModelIds: [
-      // XAI Models
-      'chat-model', 
+      // Basic Models
+      'chat-model',
+      'groq-deepseek-r1',
+      'chat-model-reasoning',
+      // Advanced Models
+      'groq-llama-scout',
+      'groq-qwen-qwq',
+      'gemini-2-0-flash',
+      'claude-3-5-sonnet',
+      'claude-3-7-sonnet',
+      'openai-o1',
+      'openai-o3',
+    ],
+  },
+
+  /*
+   * For users with Expert plan ($41/month)
+   */
+  expert: {
+    maxMessagesPerDay: -1, // Unlimited
+    availableChatModelIds: [
+      // All Models
+      'chat-model',
       'chat-model-reasoning',
       // Groq Models
       'groq-llama-scout',
@@ -54,8 +86,4 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'openai-o1-preview',
     ],
   },
-
-  /*
-   * TODO: For users with an account and a paid membership
-   */
 };

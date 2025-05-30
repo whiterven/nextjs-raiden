@@ -7,9 +7,9 @@ import './globals.css';
 import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'AiCM - All-in-One AI Chat Platform',
-  description: 'AIChatMesh: Seamlessly chat with multiple AI models like OpenAI, Grok, Gemini, and more in one powerful platform.',
+  metadataBase: new URL('https://bineai.com'),
+  title: 'BineAI - The Ultimate Multi-Model AI Chat Platform',
+  description: 'Experience seamless conversations with multiple AI models in one place. Chat with OpenAI, Claude, Grok, Gemini, DeepSeek and more - all in a single conversation. One subscription, unlimited possibilities.',
 };
 
 export const viewport = {

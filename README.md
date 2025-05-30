@@ -1,62 +1,103 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chat SDK</h1>
-</a>
+# BineAI - Your Universal AI Chat Platform
 
 <p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
+  <h1 align="center">BineAI</h1>
 </p>
 
 <p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
+    BineAI is revolutionizing the way people interact with AI models by providing a unified platform where users can seamlessly chat with multiple AI models in a single conversation thread.
+</p>
+
+<p align="center">
+  <a href="#why-bineai"><strong>Why BineAI?</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
+  <a href="#supported-models"><strong>Supported Models</strong></a> ·
+  <a href="#getting-started"><strong>Getting Started</strong></a>
 </p>
 <br/>
 
+## Why BineAI?
+
+In today's world, accessing different AI models means managing multiple subscriptions, switching between platforms, and starting new conversations for each model. BineAI changes this by offering:
+
+- **One Platform, All Models**: Access OpenAI, Claude, Grok, Gemini, DeepSeek, and more through a single interface
+- **Seamless Conversations**: Continue the same conversation across different models without starting over
+- **Single Subscription**: Pay once, access all models - no need for multiple subscriptions
+- **Unified Experience**: Consistent interface and history across all your AI interactions
+
 ## Features
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+- **Unified Chat Interface**
+  - Seamlessly switch between AI models within the same conversation
+  - Smart context preservation when switching models
+  - Rich message formatting and code highlighting
 
-## Model Providers
+- **Advanced Model Integration**
+  - Real-time model switching without losing context
+  - Support for all major AI models including GPT-4, Claude, Grok, Gemini, and more
+  - Automatic handling of model-specific features and capabilities
 
-This template ships with [xAI](https://x.ai) `grok-2-1212` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+- **Smart Session Management**
+  - Persistent chat history across sessions
+  - Cross-model conversation continuity
+  - Intelligent context management
 
-## Deploy Your Own
+- **Enterprise-Grade Security**
+  - End-to-end encryption
+  - Secure API handling
+  - Privacy-focused design
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+- **User-Friendly Features**
+  - Intuitive model switching
+  - Customizable interface
+  - Mobile-responsive design
+  - Dark/Light mode support
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET&envDescription=Learn+more+about+how+to+get+the+API+Keys+for+the+application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI+Chatbot&demo-description=An+Open-Source+AI+Chatbot+Template+Built+With+Next.js+and+the+AI+SDK+by+Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&products=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22ai%22%2C%22productSlug%22%3A%22grok%22%2C%22integrationSlug%22%3A%22xai%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22neon%22%2C%22integrationSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22productSlug%22%3A%22upstash-kv%22%2C%22integrationSlug%22%3A%22upstash%22%7D%2C%7B%22type%22%3A%22blob%22%7D%5D)
+## Supported Models
 
-## Running locally
+BineAI currently supports:
+- OpenAI (GPT-4, GPT-3.5)
+- Anthropic Claude
+- xAI Grok
+- Google Gemini
+- DeepSeek
+- And more being added regularly!
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+## Technical Stack
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
+Built with cutting-edge technology:
+- [Next.js 14](https://nextjs.org) with App Router
+- Real-time streaming responses
+- Server Components and Actions
+- [shadcn/ui](https://ui.shadcn.com) for beautiful UI
+- PostgreSQL for reliable data storage
+- Auth.js for secure authentication
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+## Getting Started
+
+1. Create your BineAI account at [bineai.com](https://bineai.com)
+2. Choose your subscription plan
+3. Start chatting with any AI model instantly
+
+## Development
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+Your BineAI instance will be running on [localhost:3000](http://localhost:3000).
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
+
+## License
+
+BineAI is licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">
+  <i>One platform, endless possibilities. Welcome to the future of AI chat.</i>
+</p>

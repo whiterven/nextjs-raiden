@@ -1,12 +1,12 @@
 {
   "version": "7",
-  "dialect": "postgres",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
       "version": "7",
-      "when": 1748610382941,
-      "tag": "0000_tired_young_avengers",
+      "when": 1748635125647,
+      "tag": "0000_aromatic_wallow",
       "breakpoints": true
     }
   ]
