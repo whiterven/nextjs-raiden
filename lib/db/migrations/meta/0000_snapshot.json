@@ -1,5 +1,5 @@
 {
-  "id": "1f7ecc25-570e-401d-89f1-bc482abbc24b",
+  "id": "ca317485-181b-4aee-bb55-7fd065c303b6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -432,6 +432,41 @@
           "type": "varchar(64)",
           "primaryKey": false,
           "notNull": false
+        },
+        "language": {
+          "name": "language",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'en'"
+        },
+        "communicationEmails": {
+          "name": "communicationEmails",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "marketingEmails": {
+          "name": "marketingEmails",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "socialEmails": {
+          "name": "socialEmails",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "securityEmails": {
+          "name": "securityEmails",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
         }
       },
       "indexes": {},

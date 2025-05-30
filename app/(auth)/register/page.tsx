@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useState } from 'react';
 
@@ -40,7 +41,7 @@ export default function RegisterPage() {
       updateSession();
       router.refresh();
     }
-  }, [state]);
+  }, [state.status, router, updateSession]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);
@@ -48,28 +49,67 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex h-[100vh] flex-col items-center justify-center gap-8">
-      <div className="flex w-full max-w-[400px] flex-col items-center gap-8">
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="text-2xl font-semibold">Create an account</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Enter your information to create an account
-          </p>
+    <div className="flex h-dvh w-screen bg-background">
+      {/* Image section - only visible on desktop */}
+      <div className="hidden md:flex w-1/2 bg-zinc-50 dark:bg-zinc-900 items-center justify-center">
+        <div className="relative w-full max-w-md aspect-square">
+          <Image
+            src="/bineai-login.png"
+            alt="BineAI Register"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
+      </div>
 
-        <AuthForm action={handleSubmit} showNameFields={true}>
-          <SubmitButton isSuccessful={isSuccessful}>Create account</SubmitButton>
-          <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
-            {'Already have an account? '}
-            <Link
-              href="/login"
-              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+      {/* Form section */}
+      <div className="w-full md:w-1/2 flex items-start pt-12 md:pt-0 md:items-center justify-center">
+        <div className="w-full max-w-md overflow-hidden rounded-2xl flex flex-col gap-12">
+          <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
+            <button
+              onClick={() => router.back()}
+              className="self-start text-gray-600 hover:underline dark:text-zinc-400"
             >
-              Sign in
-            </Link>
-            {' instead.'}
-          </p>
-        </AuthForm>
+              Back
+            </button>
+            <h3 className="text-xl font-semibold dark:text-zinc-50">Create an account</h3>
+            <p className="text-sm text-gray-500 dark:text-zinc-400">
+              Enter your information to create an account
+            </p>
+          </div>
+
+          <AuthForm action={handleSubmit} showNameFields={true}>
+            <SubmitButton isSuccessful={isSuccessful}>Create account</SubmitButton>
+            <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
+              {'Already have an account? '}
+              <Link
+                href="/login"
+                className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              >
+                Sign in
+              </Link>
+              {' instead.'}
+            </p>
+            <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
+              By clicking Create Account, you agree to our{' '}
+              <Link
+                href="/terms"
+                className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              >
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link
+                href="/privacy"
+                className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </AuthForm>
+        </div>
       </div>
     </div>
   );

@@ -17,6 +17,11 @@ export const user = pgTable('User', {
   password: varchar('password', { length: 64 }),
   firstName: varchar('firstName', { length: 64 }),
   lastName: varchar('lastName', { length: 64 }),
+  language: varchar('language', { length: 2 }).default('en'),
+  communicationEmails: boolean('communicationEmails').default(true),
+  marketingEmails: boolean('marketingEmails').default(false),
+  socialEmails: boolean('socialEmails').default(false),
+  securityEmails: boolean('securityEmails').default(true),
 });
 
 export type User = InferSelectModel<typeof user>;

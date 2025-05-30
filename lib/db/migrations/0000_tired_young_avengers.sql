@@ -58,7 +58,12 @@ CREATE TABLE IF NOT EXISTS "User" (
 	"email" varchar(64) NOT NULL,
 	"password" varchar(64),
 	"firstName" varchar(64),
-	"lastName" varchar(64)
+	"lastName" varchar(64),
+	"language" varchar(2) DEFAULT 'en',
+	"communicationEmails" boolean DEFAULT true,
+	"marketingEmails" boolean DEFAULT false,
+	"socialEmails" boolean DEFAULT false,
+	"securityEmails" boolean DEFAULT true
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Vote_v2" (

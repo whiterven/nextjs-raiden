@@ -103,9 +103,9 @@ export function AuthForm({
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
-              <EyeOffIcon className="h-4 w-4" />
+              <EyeOffIcon className="size-4" />
             ) : (
-              <EyeIcon className="h-4 w-4" />
+              <EyeIcon className="size-4" />
             )}
           </Button>
         </div>

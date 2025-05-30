@@ -52,7 +52,12 @@ export async function getUser(email: string): Promise<Array<User>> {
         email: user.email,
         password: user.password,
         firstName: user.firstName ?? null,
-        lastName: user.lastName ?? null
+        lastName: user.lastName ?? null,
+        language: user.language ?? null,
+        communicationEmails: user.communicationEmails ?? null,
+        marketingEmails: user.marketingEmails ?? null,
+        socialEmails: user.socialEmails ?? null,
+        securityEmails: user.securityEmails ?? null
       })
       .from(user)
       .where(eq(user.email, email));

@@ -60,27 +60,27 @@ function PureMultimodalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, []);
-
-  const adjustHeight = () => {
+  const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const maxHeight = width && width > 768 ? 200 : 150;
       const newHeight = Math.min(textareaRef.current.scrollHeight + 2, maxHeight);
       textareaRef.current.style.height = `${newHeight}px`;
     }
-  };
+  }, [width]);
 
-  const resetHeight = () => {
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustHeight();
+    }
+  }, [adjustHeight]);
+
+  const resetHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = width && width > 768 ? '48px' : '36px';
     }
-  };
+  }, [width]);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -132,6 +132,7 @@ function PureMultimodalInput({
     setLocalStorageInput,
     width,
     chatId,
+    resetHeight,
   ]);
 
   const uploadFile = async (file: File) => {
