@@ -18,6 +18,7 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
+import { MessageLimitWarning } from "./message-limit-warning"
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
@@ -232,6 +233,8 @@ function PureMultimodalInput({
             selectedVisibilityType={selectedVisibilityType}
           />
         )}
+
+      <MessageLimitWarning />
 
       <input
         type="file"
