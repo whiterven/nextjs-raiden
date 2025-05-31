@@ -91,7 +91,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 data-testid="user-nav-button"
                 className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10"
               >
-                <Avatar className="h-6 w-6">
+                <Avatar className="size-6">
                   <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} alt="Guest" />
                   <AvatarFallback>G</AvatarFallback>
                 </Avatar>
@@ -139,7 +139,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="size-8 rounded-lg">
                 <AvatarImage src={`https://avatar.vercel.sh/${session?.user?.email}`} alt={session?.user?.email ?? ''} />
                 <AvatarFallback className="rounded-lg">
                   {session?.user?.email?.charAt(0).toUpperCase() ?? 'U'}
@@ -160,7 +160,7 @@ export function SidebarUserNav({ user }: { user: User }) {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+                <Avatar className="size-8 rounded-lg">
                   <AvatarImage src={`https://avatar.vercel.sh/${session?.user?.email}`} alt={session?.user?.email ?? ''} />
                   <AvatarFallback className="rounded-lg">
                     {session?.user?.email?.charAt(0).toUpperCase() ?? 'U'}
@@ -175,22 +175,22 @@ export function SidebarUserNav({ user }: { user: User }) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => router.push('/pricing')}>
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-2 size-4 w-4" />
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => router.push('/settings')}>
-                <BadgeCheck className="mr-2 h-4 w-4" />
+                <BadgeCheck className="mr-2 size-4 w-4" />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/billing')}>
-                <CreditCard className="mr-2 h-4 w-4" />
+                <CreditCard className="mr-2 size-4 w-4" />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Bell className="mr-2 h-4 w-4" />
+                <Bell className="mr-2 size-4 w-4" />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -202,7 +202,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 });
               }}
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 size-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

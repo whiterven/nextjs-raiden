@@ -92,9 +92,9 @@ export function PricingComparison() {
                 <TableCell>
                   {typeof feature.regular === 'boolean' ? (
                     feature.regular ? (
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="size-4 text-primary" />
                     ) : (
-                      <Minus className="h-4 w-4 text-muted-foreground" />
+                      <Minus className="size-4 text-muted-foreground" />
                     )
                   ) : (
                     feature.regular
@@ -103,9 +103,9 @@ export function PricingComparison() {
                 <TableCell>
                   {typeof feature.advanced === 'boolean' ? (
                     feature.advanced ? (
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="size-4 text-primary" />
                     ) : (
-                      <Minus className="h-4 w-4 text-muted-foreground" />
+                      <Minus className="size-4 text-muted-foreground" />
                     )
                   ) : (
                     feature.advanced
@@ -114,9 +114,9 @@ export function PricingComparison() {
                 <TableCell>
                   {typeof feature.expert === 'boolean' ? (
                     feature.expert ? (
-                      <Check className="h-4 w-4 text-primary" />
+                      <Check className="size-4 text-primary" />
                     ) : (
-                      <Minus className="h-4 w-4 text-muted-foreground" />
+                      <Minus className="size-4 text-muted-foreground" />
                     )
                   ) : (
                     feature.expert

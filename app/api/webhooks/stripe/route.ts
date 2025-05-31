@@ -6,85 +6,92 @@ import { StripeService } from '@/lib/payment/stripe-service';
 import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
+  const body = await req.text();
+  const headersList = await headers();
+  const signature = headersList.get("Stripe-Signature");
+
+  if (!signature) {
+    return new NextResponse("No signature", { status: 400 });
+  }
+
   try {
-    const body = await req.text();
-    const headersList = await headers();
-    const signature = headersList.get('stripe-signature');
-
-    if (!signature) {
-      return new NextResponse('No signature', { status: 400 });
-    }
-
     const stripeService = StripeService.getInstance();
     const event = await stripeService.handleWebhook(body, signature);
 
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data;
-        const userId = session.metadata.userId;
-        const planType = session.metadata.planType;
+        const userId = session.metadata?.userId;
+        const planType = session.metadata?.planType;
 
-        // Update user type and create subscription
-        await db.transaction(async (tx) => {
-          await tx
-            .update(user)
+        if (userId && planType) {
+          // Update user type
+          await db.update(user)
             .set({ type: planType })
             .where(eq(user.id, userId));
 
-          await tx.insert(subscription).values({
+          // Create or update subscription
+          await db.insert(subscription).values({
             userId,
             plan: planType,
             status: 'active',
-            stripeCustomerId: session.customer,
-            stripeSubscriptionId: session.subscription,
+            startDate: new Date(),
+            stripeCustomerId: session.customer as string,
+            stripeSubscriptionId: session.subscription as string,
+          }).onConflictDoUpdate({
+            target: [subscription.userId],
+            set: {
+              plan: planType,
+              status: 'active',
+              startDate: new Date(),
+              stripeCustomerId: session.customer as string,
+              stripeSubscriptionId: session.subscription as string,
+              updatedAt: new Date(),
+            },
           });
-        });
-
+        }
         break;
       }
 
       case 'customer.subscription.updated': {
         const sub = event.data;
-        const stripeSubId = sub.id;
-
-        await db
-          .update(subscription)
-          .set({
-            status: sub.status === 'active' ? 'active' : 'expired',
-            updatedAt: new Date(),
-          })
-          .where(eq(subscription.stripeSubscriptionId, stripeSubId));
-
+        if (sub.status === 'active') {
+          await db.update(subscription)
+            .set({
+              status: 'active',
+              startDate: new Date(sub.current_period_start * 1000),
+              endDate: new Date(sub.current_period_end * 1000),
+              updatedAt: new Date(),
+            })
+            .where(eq(subscription.stripeSubscriptionId, sub.id));
+        }
         break;
       }
 
       case 'customer.subscription.deleted': {
         const sub = event.data;
-        const stripeSubId = sub.id;
+        
+        // Find the subscription to get userId
+        const [userSub] = await db
+          .select({ userId: subscription.userId })
+          .from(subscription)
+          .where(eq(subscription.stripeSubscriptionId, sub.id));
 
-        await db.transaction(async (tx) => {
-          const [userSub] = await tx
-            .select({ userId: subscription.userId })
-            .from(subscription)
-            .where(eq(subscription.stripeSubscriptionId, stripeSubId));
+        if (userSub) {
+          // Update user back to regular
+          await db.update(user)
+            .set({ type: 'regular' })
+            .where(eq(user.id, userSub.userId));
 
-          if (userSub) {
-            await tx
-              .update(user)
-              .set({ type: 'regular' })
-              .where(eq(user.id, userSub.userId));
-
-            await tx
-              .update(subscription)
-              .set({
-                status: 'expired',
-                endDate: new Date(),
-                updatedAt: new Date(),
-              })
-              .where(eq(subscription.stripeSubscriptionId, stripeSubId));
-          }
-        });
-
+          // Update subscription status
+          await db.update(subscription)
+            .set({
+              status: 'expired',
+              endDate: new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(subscription.stripeSubscriptionId, sub.id));
+        }
         break;
       }
     }
@@ -92,9 +99,6 @@ export async function POST(req: Request) {
     return new NextResponse(null, { status: 200 });
   } catch (error) {
     console.error('Error handling webhook:', error);
-    return new NextResponse(
-      'Webhook error: ' + (error instanceof Error ? error.message : 'Unknown error'),
-      { status: 400 },
-    );
+    return new NextResponse('Webhook error', { status: 400 });
   }
 } 
