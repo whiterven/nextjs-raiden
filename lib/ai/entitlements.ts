@@ -28,7 +28,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users with a free account (Regular)
    */
   regular: {
-    maxMessagesPerDay: 10,
+    maxMessagesPerDay: 25,
     availableChatModelIds: [
       // Basic Models
       'groq-deepseek-r1',
