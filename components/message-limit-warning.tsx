@@ -7,6 +7,7 @@ import { AlertTriangle, Clock, Sparkles } from "lucide-react"
 import { Button } from "./ui/button"
 import { useRouter } from "next/navigation"
 import { guestRegex } from "@/lib/constants"
+import { CrossIcon } from "./icons"
 
 interface MessageLimitWarningProps {
   className?: string
@@ -17,19 +18,23 @@ export function MessageLimitWarning({ className }: MessageLimitWarningProps) {
   const router = useRouter()
   const [messageCount, setMessageCount] = useState<number | null>(null)
   const [timeUntilReset, setTimeUntilReset] = useState<string>("")
+  const [isVisible, setIsVisible] = useState(true)
 
   const isGuest = guestRegex.test(session?.user?.email ?? "")
   const userType = session?.user?.type || "guest"
 
   // Message limits based on user type
   const limits = {
-    guest: 10,
-    regular: 10, // Free plan
+    guest: 2,
+    regular: 20, // Free plan
     pro: 100,
-    expert: 1000,
+    expert: 500,
   }
 
   const maxMessages = limits[userType as keyof typeof limits] || 10
+  const messagesLeft = messageCount !== null ? Math.max(0, maxMessages - messageCount) : null
+  const shouldShowWarning = messagesLeft !== null && messagesLeft <= 2
+  const isOutOfMessages = messagesLeft === 0
 
   useEffect(() => {
     const fetchMessageCount = async () => {
@@ -71,13 +76,7 @@ export function MessageLimitWarning({ className }: MessageLimitWarningProps) {
     return () => clearInterval(interval)
   }, [])
 
-  if (messageCount === null || !session?.user) return null
-
-  const messagesLeft = Math.max(0, maxMessages - messageCount)
-  const shouldShowWarning = messagesLeft <= 2
-  const isOutOfMessages = messagesLeft === 0
-
-  if (!shouldShowWarning) return null
+  if (!shouldShowWarning || !isVisible || messageCount === null || !session?.user) return null
 
   return (
     <AnimatePresence>
@@ -90,51 +89,75 @@ export function MessageLimitWarning({ className }: MessageLimitWarningProps) {
       >
         {isOutOfMessages ? (
           // Out of messages
-          <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-200 dark:border-red-800 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                  <AlertTriangle className="size-5 text-red-600 dark:text-red-400" />
+          <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-200 dark:border-red-800 rounded-xl p-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="p-1 bg-red-100 dark:bg-red-900/30 rounded-lg shrink-0">
+                  <AlertTriangle className="size-3.5 text-red-600 dark:text-red-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-red-900 dark:text-red-100">You&apos;re out of free messages</h3>
-                  <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
-                    <Clock className="size-4" />
-                    <span>Your limit will reset in {timeUntilReset}</span>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-red-900 dark:text-red-100 text-xs leading-tight truncate">
+                    You&apos;re out of free messages
+                  </h3>
+                  <div className="flex items-center gap-1 text-xs text-red-700 dark:text-red-300">
+                    <Clock className="size-3" />
+                    <span className="truncate">Reset in {timeUntilReset}</span>
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={() => router.push("/pricing")}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
-              >
-                <Sparkles className="size-4 mr-2" />
-                Upgrade to Pro
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  onClick={() => router.push("/pricing")}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 text-xs py-0.5 px-2 h-6"
+                >
+                  <Sparkles className="size-3 mr-1" />
+                  Upgrade
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={() => setIsVisible(false)}
+                >
+                  <CrossIcon size={12} />
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
           // Low messages warning
-          <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border border-orange-200 dark:border-orange-800 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                  <AlertTriangle className="size-5 text-orange-600 dark:text-orange-400" />
+          <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border border-orange-200 dark:border-orange-800 rounded-xl p-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="p-1 bg-orange-100 dark:bg-orange-900/30 rounded-lg shrink-0">
+                  <AlertTriangle className="size-3.5 text-orange-600 dark:text-orange-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-orange-900 dark:text-orange-100">
-                    You have {messagesLeft} message{messagesLeft !== 1 ? "s" : ""} left today
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-orange-900 dark:text-orange-100 text-xs leading-tight truncate">
+                    {messagesLeft} message{messagesLeft !== 1 ? "s" : ""} left today
                   </h3>
-                  <p className="text-sm text-orange-700 dark:text-orange-300">Upgrade to Pro for 10x more messages</p>
+                  <p className="text-xs text-orange-700 dark:text-orange-300 truncate">
+                    Upgrade your plan for 10x more messages
+                  </p>
                 </div>
               </div>
-              <Button
-                onClick={() => router.push("/pricing")}
-                variant="outline"
-                className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/20"
-              >
-                Upgrade to Pro
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  onClick={() => router.push("/pricing")}
+                  variant="outline"
+                  className="border-orange-300 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/20 text-xs py-0.5 px-2 h-6"
+                >
+                  Upgrade
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={() => setIsVisible(false)}
+                >
+                  <CrossIcon size={12} />
+                </Button>
+              </div>
             </div>
           </div>
         )}
