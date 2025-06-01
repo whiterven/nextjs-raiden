@@ -20,8 +20,8 @@ import {
 export const myProvider = isTestEnvironment
   ? customProvider({
       languageModels: {
-        'chat-model': chatModel,
-        'chat-model-reasoning': reasoningModel,
+        'grok-2-vision': chatModel,
+        'grok-3-mini-beta': reasoningModel,
         'title-model': titleModel,
         'artifact-model': artifactModel,
         'groq-llama-scout': chatModel,
@@ -46,12 +46,12 @@ export const myProvider = isTestEnvironment
   : customProvider({
       languageModels: {
         // XAI Models
-        'chat-model': xai('grok-2-vision-1212'),
-        'chat-model-reasoning': wrapLanguageModel({
+        'grok-2-vision': xai('grok-2-vision-1212'),
+        'grok-3-mini-beta': wrapLanguageModel({
           model: xai('grok-3-mini-beta'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
+        'grok-2-1212': xai('grok-2-1212'),
         'artifact-model': xai('grok-2-1212'),
         
         // Groq Models

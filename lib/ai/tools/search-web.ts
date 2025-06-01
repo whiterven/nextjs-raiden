@@ -2,121 +2,96 @@ import { tool } from "ai"
 import { z } from "zod"
 
 export const searchWeb = tool({
-  description: "Search the web using DuckDuckGo for current information, news, or any topic",
+  description: "Search the web using Tavily for current information, news, or any topic",
   parameters: z.object({
     query: z.string().describe("The search query to look up"),
-    maxResults: z.number().optional().default(5).describe("Maximum number of results to return (1-10)"),
-    region: z.string().optional().describe('Region for search results (e.g., "us-en", "uk-en", "de-de")'),
+    maxResults: z.number().optional().default(7).describe("Maximum number of results to return (1-10)"),
+    searchDepth: z.enum(["basic", "advanced"]).optional().default("advanced").describe("Search depth level"),
+    includeAnswer: z.boolean().optional().default(true).describe("Include AI-generated answer"),
+    includeImages: z.boolean().optional().default(true).describe("Include relevant images"),
+    onProgress: z.function().optional().describe("Callback function to show loading state"),
   }),
-  execute: async ({ query, maxResults = 5, region = "us-en" }) => {
+  execute: async ({ query, maxResults = 7, searchDepth = "advanced", includeAnswer = false, includeImages = true, onProgress }) => {
+    // Show loading state if callback is provided
+    if (onProgress) {
+      onProgress({ isLoading: true, query })
+    }
     try {
       // Validate maxResults
-      const limitedResults = Math.min(Math.max(maxResults, 1), 10)
+      const limitedResults = Math.min(Math.max(maxResults, 1), 20)
+      
+      // Get API key from environment
+      const apiKey = process.env.TAVILY_API_KEY
+      if (!apiKey) {
+        throw new Error("TAVILY_API_KEY not found in environment variables")
+      }
 
-      // DuckDuckGo Instant Answer API
-      const searchUrl = new URL("https://api.duckduckgo.com/")
-      searchUrl.searchParams.set("q", query)
-      searchUrl.searchParams.set("format", "json")
-      searchUrl.searchParams.set("no_html", "1")
-      searchUrl.searchParams.set("skip_disambig", "1")
-      searchUrl.searchParams.set("no_redirect", "1")
-      searchUrl.searchParams.set("safe_search", "moderate")
+      // Prepare Tavily API request
+      const tavilyPayload = {
+        query,
+        search_depth: searchDepth,
+        max_results: limitedResults,
+        include_answer: includeAnswer,
+        include_images: includeImages,
+        include_raw_content: false,
+        format: "json"
+      }
 
-      const response = await fetch(searchUrl.toString(), {
+      const response = await fetch("https://api.tavily.com/search", {
+        method: "POST",
         headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; AI Assistant/1.0)",
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
         },
+        body: JSON.stringify(tavilyPayload),
       })
 
       if (!response.ok) {
-        throw new Error(`Search API returned ${response.status}: ${response.statusText}`)
+        throw new Error(`Tavily API returned ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
 
-      // Extract relevant information from DuckDuckGo response
+      // Transform Tavily response to our format
       const results = []
 
-      // Add instant answer if available
-      if (data.Abstract && data.Abstract.trim()) {
+      // Add AI-generated answer if available
+      if (data.answer && data.answer.trim()) {
         results.push({
-          title: data.Heading || "Instant Answer",
-          snippet: data.Abstract,
-          url: data.AbstractURL || "",
-          source: data.AbstractSource || "DuckDuckGo",
-          type: "instant_answer",
+          title: "Search Summary",
+          snippet: data.answer,
+          url: "",
+          source: "BineAI",
+          type: "ai_answer",
+          score: 1.0,
         })
       }
 
-      // Add definition if available
-      if (data.Definition && data.Definition.trim()) {
-        results.push({
-          title: "Definition",
-          snippet: data.Definition,
-          url: data.DefinitionURL || "",
-          source: data.DefinitionSource || "Dictionary",
-          type: "definition",
-        })
-      }
-
-      // Add related topics
-      if (data.RelatedTopics && Array.isArray(data.RelatedTopics)) {
-        for (const topic of data.RelatedTopics.slice(0, limitedResults - results.length)) {
-          if (topic.Text && topic.Text.trim()) {
-            results.push({
-              title: topic.Text.split(" - ")[0] || "Related Topic",
-              snippet: topic.Text,
-              url: topic.FirstURL || "",
-              source: "DuckDuckGo",
-              type: "related_topic",
-            })
-          }
-        }
-      }
-
-      // If no results from instant answers, try to get web results
-      if (results.length === 0) {
-        // Fallback: Use DuckDuckGo HTML search (note: this is less reliable)
-        const htmlSearchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`
-
-        try {
-          const htmlResponse = await fetch(htmlSearchUrl, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; AI Assistant/1.0)",
-            },
+      // Add search results
+      if (data.results && Array.isArray(data.results)) {
+        for (const result of data.results) {
+          results.push({
+            title: result.title || "Untitled",
+            snippet: result.content || "No description available",
+            url: result.url || "",
+            source: result.source || new URL(result.url || "").hostname,
+            type: "web_result",
+            score: result.score || 0,
+            publishedDate: result.published_date,
           })
-
-          if (htmlResponse.ok) {
-            const htmlText = await htmlResponse.text()
-
-            // Basic HTML parsing for search results (simplified)
-            const titleMatches = htmlText.match(/<a[^>]*class="result__a"[^>]*>([^<]+)<\/a>/g) || []
-            const snippetMatches = htmlText.match(/<a[^>]*class="result__snippet"[^>]*>([^<]+)<\/a>/g) || []
-
-            for (let i = 0; i < Math.min(titleMatches.length, limitedResults); i++) {
-              const title = titleMatches[i]?.replace(/<[^>]*>/g, "").trim() || `Result ${i + 1}`
-              const snippet = snippetMatches[i]?.replace(/<[^>]*>/g, "").trim() || "No description available"
-
-              results.push({
-                title,
-                snippet,
-                url: "",
-                source: "DuckDuckGo Search",
-                type: "web_result",
-              })
-            }
-          }
-        } catch (htmlError) {
-          console.warn("HTML search fallback failed:", htmlError)
         }
       }
 
-      // If still no results, provide a helpful message
+      // Add images if available
+      const images = data.images || []
+
+      // If no results, provide a helpful message
       if (results.length === 0) {
         return {
           query,
           results: [],
-          message: `No specific results found for "${query}". You may want to try a different search term or check the spelling.`,
+          images: [],
+          message: `No specific results found for "${query}". You may want to try a different search term.`,
           timestamp: new Date().toISOString(),
         }
       }
@@ -124,9 +99,11 @@ export const searchWeb = tool({
       return {
         query,
         results: results.slice(0, limitedResults),
+        images: images.slice(0, 5), // Limit images to 5
         totalResults: results.length,
         timestamp: new Date().toISOString(),
-        region,
+        searchDepth,
+        responseTime: data.response_time,
       }
     } catch (error) {
       return {

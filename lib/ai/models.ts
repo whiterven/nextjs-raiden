@@ -1,5 +1,5 @@
 //lib/ai/models.ts
-export const DEFAULT_CHAT_MODEL: string = 'chat-model';
+export const DEFAULT_CHAT_MODEL: string = 'gemini-2-0-flash';
 
 export interface ChatModel {
   id: string;
@@ -10,14 +10,34 @@ export interface ChatModel {
 export const chatModels: Array<ChatModel> = [
   // XAI Models
   {
-    id: 'chat-model',
-    name: 'Chat model',
+    id: 'grok-2-vision',
+    name: 'Grok 2 Vision',
     description: 'Primary model for all-purpose chat',
   },
   {
-    id: 'chat-model-reasoning',
-    name: 'Reasoning model',
-    description: 'Uses advanced reasoning',
+    id: 'grok-3',
+    name: 'Grok 3',
+    description: 'Latest xAI model for advanced conversations',
+  },
+  {
+    id: 'grok-3-fast',
+    name: 'Grok 3 Fast',
+    description: 'Fast version of Grok 3 for quick responses',
+  },
+  {
+    id: 'grok-3-mini',
+    name: 'Grok 3 Mini',
+    description: 'Compact version of Grok 3',
+  },
+  {
+    id: 'grok-3-mini-fast',
+    name: 'Grok 3 Mini Fast',
+    description: 'Fast and compact Grok 3 model',
+  },
+  {
+    id: 'grok-3-mini-beta',
+    name: 'Grok 3 Mini beta',
+    description: 'xAI Powerful Model with reasoning',
   },
   
   // Groq Models
@@ -111,5 +131,56 @@ export const chatModels: Array<ChatModel> = [
     id: 'openai-o1-preview',
     name: 'GPT-o1 Preview',
     description: 'Preview of OpenAI\'s reasoning capabilities',
+  },
+  
+  // Mistral Models
+  {
+    id: 'pixtral-large-latest',
+    name: 'Pixtral Large',
+    description: 'Mistral\'s multimodal model for text and vision',
+  },
+  {
+    id: 'mistral-large-latest',
+    name: 'Mistral Large',
+    description: 'Mistral\'s most capable large language model',
+  },
+  {
+    id: 'mistral-small-latest',
+    name: 'Mistral Small',
+    description: 'Efficient Mistral model for everyday tasks',
+  },
+  
+  // Perplexity Models
+  {
+    id: 'sonar-pro',
+    name: 'Sonar Pro',
+    description: 'Perplexity\'s premium search-enhanced model',
+  },
+  {
+    id: 'sonar',
+    name: 'Sonar',
+    description: 'Perplexity\'s search-powered language model',
+  },
+  {
+    id: 'sonar-deep-research',
+    name: 'Sonar Deep Research',
+    description: 'Advanced research model with deep analysis capabilities',
+  },
+  
+  // Together.ai Models
+  {
+    id: 'mixtral-8x22b-instruct',
+    name: 'Mixtral 8x22B Instruct',
+    description: 'Mistral\'s mixture of experts model via Together.ai',
+  },
+  {
+    id: 'mistral-7b-instruct',
+    name: 'Mistral 7B Instruct',
+    description: 'Efficient 7B parameter Mistral model',
+  },
+  {
+    id: 'deepseek-v3',
+    name: 'DeepSeek V3',
+    description: 'Advanced reasoning model with thinking capabilities',
   },
 ];
