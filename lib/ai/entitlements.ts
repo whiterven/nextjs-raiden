@@ -12,24 +12,28 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users without an account (Guest)
    */
   guest: {
-    maxMessagesPerDay: 5,
+    maxMessagesPerDay: 1,
     availableChatModelIds: [
-      'chat-model',
       'groq-deepseek-r1',
-      'chat-model-reasoning',
+      'groq-llama-scout',
+      'gemini-2-0-flash',
     ],
+    // canUseTools: false,
+    // canCreateDocuments: true,
+    // canUseAdvancedFeatures: false,
   },
 
   /*
    * For users with a free account (Regular)
    */
   regular: {
-    maxMessagesPerDay: 5,
+    maxMessagesPerDay: 7,
     availableChatModelIds: [
       // Basic Models
-      'chat-model',
       'groq-deepseek-r1',
-      'chat-model-reasoning',
+      'groq-llama-scout',
+      'groq-qwen-qwq',
+      'gemini-2-0-flash',
     ],
   },
 
