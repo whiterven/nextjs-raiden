@@ -1,15 +1,17 @@
+//artifacts/text/server.ts
 import { smoothStream, streamText } from 'ai';
-import { myProvider } from '@/lib/ai/providers';
+import { getProviderWithSelectedModel } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { updateDocumentPrompt } from '@/lib/ai/prompts';
 
-export const textDocumentHandler = createDocumentHandler<'text'>({
+export const createTextDocumentHandler = (selectedModel?: string) => createDocumentHandler<'text'>({
   kind: 'text',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
+    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
 
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: provider.languageModel('artifact-model'),
       system:
         'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
       experimental_transform: smoothStream({ chunking: 'word' }),
@@ -35,9 +37,10 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
+    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
 
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: provider.languageModel('artifact-model'),
       system: updateDocumentPrompt(document.content, 'text'),
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: description,
@@ -68,3 +71,6 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
     return draftContent;
   },
 });
+
+// Default export for backward compatibility
+export const textDocumentHandler = createTextDocumentHandler();

@@ -1,16 +1,18 @@
-import { myProvider } from '@/lib/ai/providers';
+//artifacts/sheet/server.ts
+import { getProviderWithSelectedModel } from '@/lib/ai/providers';
 import { sheetPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { streamObject } from 'ai';
 import { z } from 'zod';
 
-export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
+export const createSheetDocumentHandler = (selectedModel?: string) => createDocumentHandler<'sheet'>({
   kind: 'sheet',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
+    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
 
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: provider.languageModel('artifact-model'),
       system: sheetPrompt,
       prompt: title,
       schema: z.object({
@@ -45,9 +47,10 @@ export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
+    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
 
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: provider.languageModel('artifact-model'),
       system: updateDocumentPrompt(document.content, 'sheet'),
       prompt: description,
       schema: z.object({
@@ -76,3 +79,6 @@ export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
     return draftContent;
   },
 });
+
+// Default export for backward compatibility
+export const sheetDocumentHandler = createSheetDocumentHandler();
