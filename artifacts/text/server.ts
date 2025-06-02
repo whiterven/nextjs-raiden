@@ -8,7 +8,7 @@ export const createTextDocumentHandler = (selectedModel?: string) => createDocum
   kind: 'text',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
-    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
+    const provider = getProviderWithSelectedModel(selectedModel || 'gemini-2.0-flash');
 
     const { fullStream } = streamText({
       model: provider.languageModel('artifact-model'),
@@ -37,7 +37,7 @@ export const createTextDocumentHandler = (selectedModel?: string) => createDocum
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
-    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
+    const provider = getProviderWithSelectedModel(selectedModel || 'gemini-2.0-flash');
 
     const { fullStream } = streamText({
       model: provider.languageModel('artifact-model'),
