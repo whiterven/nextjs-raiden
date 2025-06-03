@@ -1,18 +1,17 @@
-//artifacts/code/server.ts
 import { z } from 'zod';
 import { streamObject } from 'ai';
-import { getProviderWithSelectedModel } from '@/lib/ai/providers';
+import { myProvider } from '@/lib/ai/providers';
 import { codePrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
+import { getSelectedModel } from '@/lib/ai/selectedModel';
 
-export const createCodeDocumentHandler = (selectedModel?: string) => createDocumentHandler<'code'>({
+export const codeDocumentHandler = createDocumentHandler<'code'>({
   kind: 'code',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
-    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
 
     const { fullStream } = streamObject({
-      model: provider.languageModel('artifact-model'),
+      model: myProvider.languageModel(getSelectedModel()),
       system: codePrompt,
       prompt: title,
       schema: z.object({
@@ -42,10 +41,9 @@ export const createCodeDocumentHandler = (selectedModel?: string) => createDocum
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
-    const provider = getProviderWithSelectedModel(selectedModel || 'grok-2-1212');
 
     const { fullStream } = streamObject({
-      model: provider.languageModel('artifact-model'),
+      model: myProvider.languageModel(getSelectedModel()),
       system: updateDocumentPrompt(document.content, 'code'),
       prompt: description,
       schema: z.object({
@@ -74,6 +72,3 @@ export const createCodeDocumentHandler = (selectedModel?: string) => createDocum
     return draftContent;
   },
 });
-
-// Default export for backward compatibility
-export const codeDocumentHandler = createCodeDocumentHandler();

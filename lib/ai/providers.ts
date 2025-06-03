@@ -9,6 +9,9 @@ import { groq } from '@ai-sdk/groq';
 import { google } from '@ai-sdk/google';
 import { anthropic } from '@ai-sdk/anthropic';
 import { openai } from '@ai-sdk/openai';
+import { mistral } from '@ai-sdk/mistral';
+import { perplexity } from '@ai-sdk/perplexity';
+import { togetherai } from '@ai-sdk/togetherai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -17,17 +20,17 @@ import {
   titleModel,
 } from './models.test';
 
-// Function to create provider with dynamic artifact model
-export const createProviderWithArtifactModel = (selectedModel?: string) => {
-  if (isTestEnvironment) {
-    return customProvider({
+export const myProvider = isTestEnvironment
+  ? customProvider({
       languageModels: {
         'grok-2-vision': chatModel,
+        'grok-3': chatModel,
+        'grok-3-fast': chatModel,
+        'grok-3-mini': chatModel,
+        'grok-3-mini-fast': chatModel,
         'grok-3-mini-beta': reasoningModel,
         'title-model': titleModel,
-        'artifact-model': selectedModel ? 
-          (['grok-3-mini-beta', 'groq-deepseek-r1', 'groq-qwen-qwq', 'gemini-2-5-pro-preview', 'gemini-2-5-flash-preview', 'gemini-2-5-pro-exp', 'claude-4-opus', 'claude-4-sonnet', 'claude-3-7-sonnet', 'openai-o4-mini', 'openai-o3', 'openai-o3-mini', 'openai-o1', 'openai-o1-mini', 'openai-o1-preview'].includes(selectedModel) ? reasoningModel : chatModel) 
-          : artifactModel,
+        'artifact-model': artifactModel,
         'groq-llama-scout': chatModel,
         'groq-deepseek-r1': reasoningModel,
         'groq-qwen-qwq': reasoningModel,
@@ -45,108 +48,129 @@ export const createProviderWithArtifactModel = (selectedModel?: string) => {
         'openai-o1': reasoningModel,
         'openai-o1-mini': reasoningModel,
         'openai-o1-preview': reasoningModel,
+        'pixtral-large-latest': chatModel,
+        'mistral-large-latest': chatModel,
+        'mistral-small-latest': chatModel,
+        'sonar-pro': chatModel,
+        'sonar': chatModel,
+        'sonar-deep-research': chatModel,
+        'mixtral-8x22b-instruct': chatModel,
+        'mistral-7b-instruct': chatModel,
+        'deepseek-v3': reasoningModel,
+      },
+    })
+  : customProvider({
+      languageModels: {
+        // XAI Models
+        'grok-2-vision': xai('grok-2-vision-1212'),
+        'grok-3': xai('grok-3'),
+        'grok-3-fast': xai('grok-3-fast'),
+        'grok-3-mini': xai('grok-3-mini'),
+        'grok-3-mini-fast': xai('grok-3-mini-fast'),
+        'grok-3-mini-beta': wrapLanguageModel({
+          model: xai('grok-3-mini-beta'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'title-model': xai('grok-2-1212'),
+        'artifact-model': xai('grok-2-1212'),
+        
+        // Groq Models
+        'groq-llama-scout': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
+        'groq-deepseek-r1': wrapLanguageModel({
+          model: groq('deepseek-r1-distill-llama-70b'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'groq-qwen-qwq': wrapLanguageModel({
+          model: groq('qwen-qwq-32b'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        
+        // Google Gemini Models
+        'gemini-2-5-pro-preview': wrapLanguageModel({
+          model: google('gemini-2.5-pro-preview-05-06'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'gemini-2-5-flash-preview': wrapLanguageModel({
+          model: google('gemini-2.5-flash-preview-04-17'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'gemini-2-5-pro-exp': wrapLanguageModel({
+          model: google('gemini-2.5-pro-exp-03-25'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'gemini-2-0-flash': google('gemini-2.0-flash'),
+        
+        // Anthropic Claude Models
+        'claude-4-opus': wrapLanguageModel({
+          model: anthropic('claude-4-opus-20250514'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'claude-4-sonnet': wrapLanguageModel({
+          model: anthropic('claude-4-sonnet-20250514'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'claude-3-7-sonnet': wrapLanguageModel({
+          model: anthropic('claude-3-7-sonnet-20250219'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'claude-3-5-sonnet': anthropic('claude-3-5-sonnet-20240620'),
+        
+        // OpenAI Models
+        'openai-o4-mini': wrapLanguageModel({
+          model: openai('o4-mini'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'openai-o3': wrapLanguageModel({
+          model: openai('o3'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'openai-o3-mini': wrapLanguageModel({
+          model: openai('o3-mini'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'openai-o1': wrapLanguageModel({
+          model: openai('o1'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'openai-o1-mini': wrapLanguageModel({
+          model: openai('o1-mini'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'openai-o1-preview': wrapLanguageModel({
+          model: openai('o1-preview'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        
+        // Mistral Models (No Reasoning)
+        'pixtral-large-latest': mistral('pixtral-large-latest'),
+        'mistral-large-latest': mistral('mistral-large-latest'),
+        'mistral-small-latest': mistral('mistral-small-latest'),
+        
+        // Perplexity Models (No Reasoning)
+        'sonar-pro': perplexity('sonar-pro'),
+        'sonar': perplexity('sonar'),
+        'sonar-deep-research': perplexity('sonar-deep-research'),
+        
+        // Together.ai Models
+        'mixtral-8x22b-instruct': togetherai('mistralai/Mixtral-8x22B-Instruct-v0.1'),
+        'mistral-7b-instruct': togetherai('mistralai/Mistral-7B-Instruct-v0.3'),
+        'deepseek-v3': wrapLanguageModel({
+          model: togetherai('deepseek-ai/DeepSeek-V3'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+      },
+      imageModels: {
+        'small-model': xai.image('grok-2-image'),
+        // Together.ai Image Models
+        'stable-diffusion-xl': togetherai.image('stabilityai/stable-diffusion-xl-base-1.0'),
+        'flux-dev': togetherai.image('black-forest-labs/FLUX.1-dev'),
+        'flux-dev-lora': togetherai.image('black-forest-labs/FLUX.1-dev-lora'),
+        'flux-schnell': togetherai.image('black-forest-labs/FLUX.1-schnell'),
+        'flux-canny': togetherai.image('black-forest-labs/FLUX.1-canny'),
+        'flux-depth': togetherai.image('black-forest-labs/FLUX.1-depth'),
+        'flux-redux': togetherai.image('black-forest-labs/FLUX.1-redux'),
+        'flux-pro-1-1': togetherai.image('black-forest-labs/FLUX.1.1-pro'),
+        'flux-pro': togetherai.image('black-forest-labs/FLUX.1-pro'),
+        'flux-schnell-free': togetherai.image('black-forest-labs/FLUX.1-schnell-Free'),
       },
     });
-  }
-
-  // Define all available models
-  const modelDefinitions = {
-    // XAI Models
-    'grok-2-vision': xai('grok-2-vision-1212'),
-    'grok-3-mini-beta': wrapLanguageModel({
-      model: xai('grok-3-mini-beta'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'grok-2-1212': xai('grok-2-1212'),
-    
-    // Groq Models
-    'groq-llama-scout': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
-    'groq-deepseek-r1': wrapLanguageModel({
-      model: groq('deepseek-r1-distill-llama-70b'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'groq-qwen-qwq': wrapLanguageModel({
-      model: groq('qwen-qwq-32b'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    
-    // Google Gemini Models
-    'gemini-2-5-pro-preview': wrapLanguageModel({
-      model: google('gemini-2.5-pro-preview-05-06'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'gemini-2-5-flash-preview': wrapLanguageModel({
-      model: google('gemini-2.5-flash-preview-04-17'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'gemini-2-5-pro-exp': wrapLanguageModel({
-      model: google('gemini-2.5-pro-exp-03-25'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'gemini-2-0-flash': google('gemini-2.0-flash'),
-    
-    // Anthropic Claude Models
-    'claude-4-opus': wrapLanguageModel({
-      model: anthropic('claude-4-opus-20250514'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'claude-4-sonnet': wrapLanguageModel({
-      model: anthropic('claude-4-sonnet-20250514'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'claude-3-7-sonnet': wrapLanguageModel({
-      model: anthropic('claude-3-7-sonnet-20250219'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'claude-3-5-sonnet': anthropic('claude-3-5-sonnet-20240620'),
-    
-    // OpenAI Models
-    'openai-o4-mini': wrapLanguageModel({
-      model: openai('o4-mini'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'openai-o3': wrapLanguageModel({
-      model: openai('o3'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'openai-o3-mini': wrapLanguageModel({
-      model: openai('o3-mini'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'openai-o1': wrapLanguageModel({
-      model: openai('o1'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'openai-o1-mini': wrapLanguageModel({
-      model: openai('o1-mini'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-    'openai-o1-preview': wrapLanguageModel({
-      model: openai('o1-preview'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
-    }),
-  };
-
-  // Set artifact-model to the selected model, or default to grok-2-1212
-  const artifactModelKey = selectedModel && modelDefinitions[selectedModel as keyof typeof modelDefinitions] 
-    ? selectedModel 
-    : 'grok-2-1212';
-
-  return customProvider({
-    languageModels: {
-      ...modelDefinitions,
-      'artifact-model': modelDefinitions[artifactModelKey as keyof typeof modelDefinitions],
-    },
-    imageModels: {
-      'small-model': xai.image('grok-2-image'),
-    },
-  });
-};
-
-// Default provider (for backward compatibility)
-export const myProvider = createProviderWithArtifactModel();
-
-// Export function to update provider with selected model
-export const getProviderWithSelectedModel = (selectedModel: string) => {
-  return createProviderWithArtifactModel(selectedModel);
-};

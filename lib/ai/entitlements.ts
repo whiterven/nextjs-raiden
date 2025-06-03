@@ -12,12 +12,13 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users without an account (Guest)
    */
   guest: {
-    maxMessagesPerDay: 2,
+    maxMessagesPerDay: 1,
     availableChatModelIds: [
       'groq-deepseek-r1',
       'groq-llama-scout',
       'gemini-2-0-flash',
       'mistral-small-latest',
+      'sonar',
     ],
     // canUseTools: false,
     // canCreateDocuments: true,
@@ -28,7 +29,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users with a free account (Regular)
    */
   regular: {
-    maxMessagesPerDay: 25,
+    maxMessagesPerDay: 20,
     availableChatModelIds: [
       // Basic Models
       'groq-deepseek-r1',
@@ -38,9 +39,9 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'groq-llama-scout',
       'groq-qwen-qwq',
       'gemini-2-0-flash',
-      // 'mistral-small-latest',
-      // 'mistral-7b-instruct',
-      // 'sonar',
+      'mistral-small-latest',
+      'mistral-7b-instruct',
+      'sonar',
     ],
   },
 
@@ -73,8 +74,6 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'sonar-pro',
       'mixtral-8x22b-instruct',
       'mistral-7b-instruct',
-      'gemini-2-5-pro-preview',
-      'gemini-2-5-flash-preview',
     ],
   },
 

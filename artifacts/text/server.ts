@@ -1,19 +1,18 @@
-//artifacts/text/server.ts
 import { smoothStream, streamText } from 'ai';
-import { getProviderWithSelectedModel } from '@/lib/ai/providers';
+import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { updateDocumentPrompt } from '@/lib/ai/prompts';
+import { getSelectedModel } from '@/lib/ai/selectedModel';
 
-export const createTextDocumentHandler = (selectedModel?: string) => createDocumentHandler<'text'>({
+export const textDocumentHandler = createDocumentHandler<'text'>({
   kind: 'text',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
-    const provider = getProviderWithSelectedModel(selectedModel || 'gemini-2.0-flash');
 
     const { fullStream } = streamText({
-      model: provider.languageModel('artifact-model'),
+      model: myProvider.languageModel(getSelectedModel()),
       system:
-        'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
+        'Write comprehensively and well detailed, about the given topic. Markdown is supported. Use headings wherever appropriate.',
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: title,
     });
@@ -37,10 +36,9 @@ export const createTextDocumentHandler = (selectedModel?: string) => createDocum
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
-    const provider = getProviderWithSelectedModel(selectedModel || 'gemini-2.0-flash');
 
     const { fullStream } = streamText({
-      model: provider.languageModel('artifact-model'),
+      model: myProvider.languageModel(getSelectedModel()),
       system: updateDocumentPrompt(document.content, 'text'),
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: description,
@@ -71,6 +69,3 @@ export const createTextDocumentHandler = (selectedModel?: string) => createDocum
     return draftContent;
   },
 });
-
-// Default export for backward compatibility
-export const textDocumentHandler = createTextDocumentHandler();
