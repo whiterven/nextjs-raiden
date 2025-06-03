@@ -1,7 +1,10 @@
-import { Claude, Grok, Gemini, Groq, Anthropic, OpenAI, Mistral, Perplexity  } from "@lobehub/icons"
+import { Claude, Grok, Gemini, Groq, Anthropic, DeepSeek, Stability, Flux, OpenAI, Mistral, Perplexity  } from "@lobehub/icons"
 
 
 export const ModelIcons = {
+  DeepSeek: () => <DeepSeek.Color size={16} />,
+  Stability: () => <Stability.Color size={16} />,
+  Flux: () => <Flux size={16} />,
   Perplexity: () => <Perplexity.Color size={16} />,
   Mistral: () => <Mistral.Color size={16} />,
   Claude: () => <Claude.Color size={16} />,
@@ -34,6 +37,15 @@ export const getModelIcon = (modelId: string) => {
   }
   if (modelId.startsWith("sonar")) {
     return ModelIcons.Perplexity
+  }
+  if (modelId.startsWith("flux-")) {
+    return ModelIcons.Flux
+  }
+  if (modelId.startsWith("stable-")) {
+    return ModelIcons.Stability 
+  }
+  if (modelId.startsWith("deepseek-")) {
+    return ModelIcons.DeepSeek 
   }
 
   // Default fallback

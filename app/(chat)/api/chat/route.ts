@@ -26,6 +26,9 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { getDateTime } from '@/lib/ai/tools/get-date-time';
 import { searchWeb } from '@/lib/ai/tools/search-web';
+import { gitHub } from '@/lib/ai/tools/github';
+import { fileManager } from '@/lib/ai/tools/file-manager';
+import { slackTool } from '@/lib/ai/tools/slack';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -178,11 +181,14 @@ export async function POST(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,
+          maxSteps: 10,
           experimental_activeTools:
             // ALL models now have access to artifacts and tools
             [
               'getWeather',
+              'gitHub',
+              'fileManager',
+              'slackTool',
               'getDateTime',
               'searchWeb',
               'createDocument',
@@ -193,6 +199,9 @@ export async function POST(request: Request) {
           experimental_generateMessageId: generateUUID,
           tools: {
             getWeather,
+            gitHub,
+            fileManager,
+            slackTool,
             getDateTime,
             searchWeb,
             createDocument: createDocument({ session, dataStream }),

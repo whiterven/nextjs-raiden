@@ -6,12 +6,13 @@ import { AnimatePresence, motion } from "framer-motion"
 import { memo, useState } from "react"
 import type { Vote } from "@/lib/db/schema"
 import { DocumentToolCall, DocumentToolResult } from "./document"
-import { PencilEditIcon, SparklesIcon } from "./icons"
+import { PencilEditIcon } from "./icons"
 import { Markdown } from "./markdown"
 import { MessageActions } from "./message-actions"
 import { PreviewAttachment } from "./preview-attachment"
 import { Weather } from "./weather"
 import { SearchResults } from "./search-results"
+import { GitHubResults } from "./github-results"
 import equal from "fast-deep-equal"
 import { cn, sanitizeText } from "@/lib/utils"
 import { Button } from "./ui/button"
@@ -61,11 +62,7 @@ const PurePreviewMessage = ({
           )}
         >
           {message.role === "assistant" && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
-                <SparklesIcon size={14} />
-              </div>
-            </div>
+            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background" />
           )}
 
           <div
@@ -151,7 +148,7 @@ const PurePreviewMessage = ({
                     <div
                       key={toolCallId}
                       className={cx({
-                        skeleton: ["getWeather", "searchWeb", "getDateTime"].includes(toolName),
+                        skeleton: ["getWeather", "searchWeb", "getDateTime", "gitHub"].includes(toolName),
                       })}
                     >
                       {toolName === "getWeather" ? (
@@ -163,12 +160,32 @@ const PurePreviewMessage = ({
                       ) : toolName === "requestSuggestions" ? (
                         <DocumentToolCall type="request-suggestions" args={args} isReadonly={isReadonly} />
                       ) : toolName === "searchWeb" ? (
-                        <div className="skeleton-bg p-4 rounded-xl">
-                          <p className="text-sm text-muted-foreground">Searching the web...</p>
+                        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card">
+                          <div className="bg-primary/10 p-2 rounded-full" />
+                          <div>
+                            <p className="text-sm font-medium">Searching the web</p>
+                            <p className="text-xs text-muted-foreground">
+                              {args.query ? `"${args.query}"` : "Please wait..."}
+                            </p>
+                          </div>
                         </div>
                       ) : toolName === "getDateTime" ? (
-                        <div className="skeleton-bg p-4 rounded-xl">
-                          <p className="text-sm text-muted-foreground">Getting date and time...</p>
+                        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card">
+                          <div className="bg-primary/10 p-2 rounded-full" />
+                          <div>
+                            <p className="text-sm font-medium">Getting date and time</p>
+                            <p className="text-xs text-muted-foreground">Please wait...</p>
+                          </div>
+                        </div>
+                      ) : toolName === "gitHub" ? (
+                        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card">
+                          <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full" />
+                          <div>
+                            <p className="text-sm font-medium">GitHub Operation</p>
+                            <p className="text-xs text-muted-foreground">
+                              {args.action ? args.action.replace(/_/g, " ") : "Processing..."}
+                            </p>
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -190,6 +207,8 @@ const PurePreviewMessage = ({
                         <DocumentToolResult type="request-suggestions" result={result} isReadonly={isReadonly} />
                       ) : toolName === "searchWeb" ? (
                         <SearchResults {...result} />
+                      ) : toolName === "gitHub" ? (
+                        <GitHubResults {...result} />
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>
                       )}
@@ -226,32 +245,14 @@ export const PreviewMessage = memo(PurePreviewMessage, (prevProps, nextProps) =>
 })
 
 export const ThinkingMessage = () => {
-  const role = "assistant"
-
   return (
-    <motion.div
-      data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-3xl px-4 group/message min-h-96"
-      initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
-      data-role={role}
-    >
-      <div
-        className={cx(
-          "flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl",
-          {
-            "group-data-[role=user]/message:bg-muted": true,
-          },
-        )}
-      >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
-        </div>
-
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">pondering...</div>
-        </div>
+    <div className="flex items-center gap-4 px-4 py-2">
+      <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background" />
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
+        <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />
+        <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" />
       </div>
-    </motion.div>
+    </div>
   )
 }
