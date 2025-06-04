@@ -187,8 +187,8 @@ export async function POST(request: Request) {
             [
               'getWeather',
               'gitHub',
-              'fileManager',
-              'slackTool',
+              // 'fileManager',
+              // 'slackTool',
               'getDateTime',
               'searchWeb',
               'createDocument',
