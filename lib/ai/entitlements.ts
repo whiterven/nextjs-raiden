@@ -33,14 +33,16 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
     availableChatModelIds: [
       // Basic Models
       'groq-deepseek-r1',
+      'openai-o1',
       // 'grok-2-vision',
       // 'grok-3-mini',
+      'claude-3-5-sonnet',
       'groq-llama-scout',
       'groq-qwen-qwq',
-      'gemini-2-0-flash',
-      'mistral-small-latest',
-      'mistral-7b-instruct',
-      'sonar',
+      // 'gemini-2-0-flash',
+      // 'mistral-small-latest',
+      // 'mistral-7b-instruct',
+      // 'sonar',
     ],
   },
 
