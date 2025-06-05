@@ -71,11 +71,9 @@ const PurePreviewMessage = ({
             })}
           >
             {message.experimental_attachments && message.experimental_attachments.length > 0 && (
-              <div data-testid={`message-attachments`} className="flex flex-row justify-end gap-2">
-                {message.experimental_attachments.map((attachment) => (
-                  <PreviewAttachment key={attachment.url} attachment={attachment} />
-                ))}
-              </div>
+              message.experimental_attachments.map((attachment) => (
+                <PreviewAttachment key={attachment.url} attachment={attachment} />
+              ))
             )}
 
             {message.parts?.map((part, index) => {
@@ -108,14 +106,14 @@ const PurePreviewMessage = ({
                         </Tooltip>
                       )}
 
-                      <div
+                      <span
                         data-testid="message-content"
-                        className={cn("flex flex-col gap-4", {
+                        className={cn("text-sm", {
                           "bg-primary text-primary-foreground px-3 py-2 rounded-xl": message.role === "user",
                         })}
                       >
                         <Markdown>{sanitizeText(part.text)}</Markdown>
-                      </div>
+                      </span>
                     </div>
                   )
                 }
@@ -160,33 +158,20 @@ const PurePreviewMessage = ({
                       ) : toolName === "requestSuggestions" ? (
                         <DocumentToolCall type="request-suggestions" args={args} isReadonly={isReadonly} />
                       ) : toolName === "searchWeb" ? (
-                        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card">
-                          <div className="bg-primary/10 p-2 rounded-full" />
-                          <div>
-                            <p className="text-sm font-medium">Searching the web</p>
-                            <p className="text-xs text-muted-foreground">
-                              {args.query ? `"${args.query}"` : "Please wait..."}
-                            </p>
-                          </div>
-                        </div>
+                        <p className="text-xs">
+                          <span className="font-medium">Searching the web: </span>
+                          {args.query ? `"${args.query}"` : "Please wait..."}
+                        </p>
                       ) : toolName === "getDateTime" ? (
-                        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card">
-                          <div className="bg-primary/10 p-2 rounded-full" />
-                          <div>
-                            <p className="text-sm font-medium">Getting date and time</p>
-                            <p className="text-xs text-muted-foreground">Please wait...</p>
-                          </div>
-                        </div>
+                        <p className="text-xs">
+                          <span className="font-medium">Getting date and time: </span>
+                          Please wait...
+                        </p>
                       ) : toolName === "gitHub" ? (
-                        <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-card">
-                          <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full" />
-                          <div>
-                            <p className="text-sm font-medium">GitHub Operation</p>
-                            <p className="text-xs text-muted-foreground">
-                              {args.action ? args.action.replace(/_/g, " ") : "Processing..."}
-                            </p>
-                          </div>
-                        </div>
+                        <p className="text-xs">
+                          <span className="font-medium">GitHub Operation: </span>
+                          {args.action ? args.action.replace(/_/g, " ") : "Processing..."}
+                        </p>
                       ) : null}
                     </div>
                   )
@@ -210,7 +195,7 @@ const PurePreviewMessage = ({
                       ) : toolName === "gitHub" ? (
                         <GitHubResults {...result} />
                       ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
+                        <pre className="text-xs">{JSON.stringify(result, null, 2)}</pre>
                       )}
                     </div>
                   )

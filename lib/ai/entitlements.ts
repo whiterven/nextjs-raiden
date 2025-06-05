@@ -18,7 +18,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'groq-llama-scout',
       'gemini-2-0-flash',
       'mistral-small-latest',
-      'sonar',
+      // 'sonar',
     ],
     // canUseTools: false,
     // canCreateDocuments: true,
@@ -33,9 +33,8 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
     availableChatModelIds: [
       // Basic Models
       'groq-deepseek-r1',
-      'grok-2-vision',
-      'grok-3-mini',
-      'grok-3-mini-fast',
+      // 'grok-2-vision',
+      // 'grok-3-mini',
       'groq-llama-scout',
       'groq-qwen-qwq',
       'gemini-2-0-flash',
@@ -52,12 +51,12 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
     maxMessagesPerDay: 100,
     availableChatModelIds: [
       // Basic Models
-      'grok-2-vision',
-      'grok-3',
-      'grok-3-fast',
-      'grok-3-mini',
-      'grok-3-mini-fast',
-      'grok-3-mini-beta',
+      // 'grok-2-vision',
+      // 'grok-3',
+      // 'grok-3-fast',
+      // 'grok-3-mini',
+      // 'grok-3-mini-fast',
+      // 'grok-3-mini-beta',
       'groq-deepseek-r1',
       // Advanced Models
       'groq-llama-scout',
@@ -84,13 +83,13 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
     maxMessagesPerDay: -1, // Unlimited
     availableChatModelIds: [
       // Grok Models
-      'grok-2-vision',
-      'grok-3',
-      'grok-3-fast',
-      'grok-3-mini',
-      'grok-3-mini-fast',
-      'grok-3-mini-beta',
-      // Groq Models
+      // 'grok-2-vision',
+      // 'grok-3',
+      // 'grok-3-fast',
+      // 'grok-3-mini',
+      // 'grok-3-mini-fast',
+      // 'grok-3-mini-beta',
+      // // Groq Models
       'groq-llama-scout',
       'groq-deepseek-r1',
       'groq-qwen-qwq',

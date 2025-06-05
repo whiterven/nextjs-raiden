@@ -15,15 +15,6 @@ import { memo } from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { type VisibilityType, VisibilitySelector } from "./visibility-selector"
 import type { Session } from "next-auth"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { LogOut, Settings } from "lucide-react"
 
 function PureChatHeader({
   chatId,
@@ -76,49 +67,6 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
         />
-      )}
-
-      {session?.user ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full order-4 md:ml-auto">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
-                <AvatarFallback>
-                  {session.user.name
-                    ? session.user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                    : "U"}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="flex items-center">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/api/auth/signout" className="flex items-center">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <Button
-          className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hidden md:flex py-1.5 px-2 h-fit md:h-[34px] order-4 md:ml-auto"
-          asChild
-        >
-          <Link href="/login">Login</Link>
-        </Button>
       )}
     </header>
   )
