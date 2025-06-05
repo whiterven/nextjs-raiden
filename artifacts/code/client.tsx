@@ -1,5 +1,7 @@
+//artifacts/code/client.tsx
 import { Artifact } from '@/components/create-artifact';
-import { CodeEditor } from '@/components/code-editor';
+import { CodeEditor, supportsPreview, supportsExecution, Language } from '@/components/code-editor';
+import { CodePreview, PreviewLanguage } from '@/components/code-preview';
 import {
   CopyIcon,
   LogsIcon,
@@ -7,6 +9,7 @@ import {
   PlayIcon,
   RedoIcon,
   UndoIcon,
+  EyeIcon,
 } from '@/components/icons';
 import { toast } from 'sonner';
 import { generateUUID } from '@/lib/utils';
@@ -15,7 +18,9 @@ import {
   ConsoleOutput,
   ConsoleOutputContent,
 } from '@/components/console';
+import { useState, useEffect } from 'react';
 
+// Output handlers for different languages
 const OUTPUT_HANDLERS = {
   matplotlib: `
     import io
@@ -52,6 +57,85 @@ const OUTPUT_HANDLERS = {
   `,
 };
 
+// Language execution engines
+const LANGUAGE_ENGINES = {
+  python: {
+    setup: async () => {
+      // @ts-expect-error - loadPyodide is not defined
+      return await globalThis.loadPyodide({
+        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
+      });
+    },
+    loadPackages: async (engine: any, code: string, messageCallback: (msg: string) => void) => {
+      await engine.loadPackagesFromImports(code, { messageCallback });
+    },
+    execute: async (engine: any, code: string) => {
+      const requiredHandlers = detectRequiredHandlers(code);
+      for (const handler of requiredHandlers) {
+        if (OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]) {
+          await engine.runPythonAsync(
+            OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS],
+          );
+          if (handler === 'matplotlib') {
+            await engine.runPythonAsync('setup_matplotlib_output()');
+          }
+        }
+      }
+      await engine.runPythonAsync(code);
+    },
+    setOutput: (engine: any, callback: (output: string) => void) => {
+      engine.setStdout({
+        batched: callback,
+      });
+    }
+  },
+  javascript: {
+    setup: async () => {
+      return {
+        logs: [],
+        originalConsole: {
+          log: console.log,
+          error: console.error,
+          warn: console.warn,
+        }
+      };
+    },
+    loadPackages: async () => {
+      // JavaScript doesn't need package loading
+    },
+    execute: async (engine: any, code: string) => {
+      // Create a safe execution context
+      const func = new Function('console', code);
+      func(engine.console);
+    },
+    setOutput: (engine: any, callback: (output: string) => void) => {
+      engine.console = {
+        log: (...args: any[]) => {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          callback(message);
+          engine.originalConsole.log.apply(console, args);
+        },
+        error: (...args: any[]) => {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          callback(`ERROR: ${message}`);
+          engine.originalConsole.error.apply(console, args);
+        },
+        warn: (...args: any[]) => {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          callback(`WARNING: ${message}`);
+          engine.originalConsole.warn.apply(console, args);
+        }
+      };
+    }
+  }
+};
+
 function detectRequiredHandlers(code: string): string[] {
   const handlers: string[] = ['basic'];
 
@@ -64,15 +148,40 @@ function detectRequiredHandlers(code: string): string[] {
 
 interface Metadata {
   outputs: Array<ConsoleOutput>;
+  language: Language;
+  showPreview: boolean;
+}
+
+// Helper function to determine if content is React code
+function isReactCode(code: string): boolean {
+  return (
+    code.includes('import React') ||
+    code.includes('from react') ||
+    code.includes('useState') ||
+    code.includes('useEffect') ||
+    code.includes('jsx') ||
+    code.includes('<') && code.includes('/>') ||
+    code.includes('function') && code.includes('return') && code.includes('<')
+  );
+}
+
+// Helper function to detect if code should only be previewed rather than executed
+function shouldOnlyPreview(language: Language, code: string): boolean {
+  return (
+    ['html', 'css'].includes(language) || 
+    (language === 'javascript' && (code.includes('document.') || code.includes('window.')))
+  );
 }
 
 export const codeArtifact = new Artifact<'code', Metadata>({
   kind: 'code',
   description:
-    'Useful for code generation; Code execution is only available for python code.',
-  initialize: async ({ setMetadata }) => {
+    'Useful for code generation with execution support for Python, JavaScript, HTML, and CSS. Includes live preview for web technologies.',
+  initialize: async ({ setMetadata, language }) => {
     setMetadata({
       outputs: [],
+      language: language as Language || 'python',
+      showPreview: false,
     });
   },
   onStreamPart: ({ streamPart, setArtifact }) => {
@@ -90,11 +199,29 @@ export const codeArtifact = new Artifact<'code', Metadata>({
       }));
     }
   },
-  content: ({ metadata, setMetadata, ...props }) => {
+  content: ({ metadata, setMetadata, language = 'python', ...props }) => {
+    const [showPreview, setShowPreview] = useState(metadata?.showPreview || false);
+    
+    const currentLanguage = metadata?.language || language as Language;
+    const previewLanguage: PreviewLanguage = isReactCode(props.content) 
+      ? 'react' 
+      : currentLanguage as PreviewLanguage;
+
+    // Automatically show preview for HTML/CSS content
+    useEffect(() => {
+      if ((currentLanguage === 'html' || currentLanguage === 'css') && !showPreview) {
+        setShowPreview(true);
+        setMetadata((prevMetadata) => ({
+          ...prevMetadata,
+          showPreview: true,
+        }));
+      }
+    }, [currentLanguage, showPreview, setMetadata]);
+
     return (
       <>
         <div className="px-1">
-          <CodeEditor {...props} />
+          <CodeEditor {...props} language={currentLanguage} />
         </div>
 
         {metadata?.outputs && (
@@ -108,6 +235,26 @@ export const codeArtifact = new Artifact<'code', Metadata>({
             }}
           />
         )}
+
+        {showPreview && supportsPreview(currentLanguage) && (
+          <CodePreview
+            code={props.content}
+            language={previewLanguage}
+            isVisible={showPreview}
+            onClose={() => {
+              setShowPreview(false);
+              setMetadata({
+                ...metadata,
+                showPreview: false,
+              });
+            }}
+            onRefresh={() => {
+              // Force refresh by toggling preview
+              setShowPreview(false);
+              setTimeout(() => setShowPreview(true), 100);
+            }}
+          />
+        )}
       </>
     );
   },
@@ -116,7 +263,24 @@ export const codeArtifact = new Artifact<'code', Metadata>({
       icon: <PlayIcon size={18} />,
       label: 'Run',
       description: 'Execute code',
-      onClick: async ({ content, setMetadata }) => {
+      onClick: async ({ content, setMetadata, language = 'python' }) => {
+        const codeLanguage = language as Language;
+        
+        if (!supportsExecution(codeLanguage)) {
+          toast.error(`Execution not supported for ${language}`);
+          return;
+        }
+        
+        // For HTML/CSS content, trigger preview instead of execution
+        if (shouldOnlyPreview(codeLanguage, content)) {
+          setMetadata((metadata) => ({
+            ...metadata,
+            showPreview: true,
+          }));
+          toast.success(`Showing ${language} preview instead of execution`);
+          return;
+        }
+
         const runId = generateUUID();
         const outputContent: Array<ConsoleOutputContent> = [];
 
@@ -133,24 +297,27 @@ export const codeArtifact = new Artifact<'code', Metadata>({
         }));
 
         try {
-          // @ts-expect-error - loadPyodide is not defined
-          const currentPyodideInstance = await globalThis.loadPyodide({
-            indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
+          const engineConfig = LANGUAGE_ENGINES[codeLanguage as keyof typeof LANGUAGE_ENGINES];
+          
+          if (!engineConfig) {
+            throw new Error(`No execution engine available for ${language}`);
+          }
+
+          const engine = await engineConfig.setup();
+
+          // Set up output capture
+          engineConfig.setOutput(engine, (output: string) => {
+            outputContent.push({
+              type: output.startsWith('data:image/png;base64')
+                ? 'image'
+                : 'text',
+              value: output,
+            });
           });
 
-          currentPyodideInstance.setStdout({
-            batched: (output: string) => {
-              outputContent.push({
-                type: output.startsWith('data:image/png;base64')
-                  ? 'image'
-                  : 'text',
-                value: output,
-              });
-            },
-          });
-
-          await currentPyodideInstance.loadPackagesFromImports(content, {
-            messageCallback: (message: string) => {
+          // Load packages if needed
+          if (engineConfig.loadPackages) {
+            await engineConfig.loadPackages(engine, content, (message: string) => {
               setMetadata((metadata) => ({
                 ...metadata,
                 outputs: [
@@ -162,25 +329,11 @@ export const codeArtifact = new Artifact<'code', Metadata>({
                   },
                 ],
               }));
-            },
-          });
-
-          const requiredHandlers = detectRequiredHandlers(content);
-          for (const handler of requiredHandlers) {
-            if (OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]) {
-              await currentPyodideInstance.runPythonAsync(
-                OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS],
-              );
-
-              if (handler === 'matplotlib') {
-                await currentPyodideInstance.runPythonAsync(
-                  'setup_matplotlib_output()',
-                );
-              }
-            }
+            });
           }
 
-          await currentPyodideInstance.runPythonAsync(content);
+          // Execute the code
+          await engineConfig.execute(engine, content);
 
           setMetadata((metadata) => ({
             ...metadata,
@@ -193,6 +346,8 @@ export const codeArtifact = new Artifact<'code', Metadata>({
               },
             ],
           }));
+
+          toast.success(`${language.charAt(0).toUpperCase() + language.slice(1)} code executed successfully!`);
         } catch (error: any) {
           setMetadata((metadata) => ({
             ...metadata,
@@ -205,8 +360,28 @@ export const codeArtifact = new Artifact<'code', Metadata>({
               },
             ],
           }));
+          toast.error(`Execution failed: ${error.message}`);
         }
       },
+      isDisabled: ({ language = 'python' }) => !supportsExecution(language as Language),
+    },
+    {
+      icon: <EyeIcon size={18} />,
+      label: 'Preview',
+      description: 'Preview code in browser',
+      onClick: ({ setMetadata, language = 'python' }) => {
+        const codeLanguage = language as Language;
+        if (!supportsPreview(codeLanguage)) {
+          toast.error(`Preview not supported for ${language}`);
+          return;
+        }
+
+        setMetadata((metadata) => ({
+          ...metadata,
+          showPreview: true,
+        }));
+      },
+      isDisabled: ({ language = 'python' }) => !supportsPreview(language as Language),
     },
     {
       icon: <UndoIcon size={18} />,
@@ -218,7 +393,6 @@ export const codeArtifact = new Artifact<'code', Metadata>({
         if (currentVersionIndex === 0) {
           return true;
         }
-
         return false;
       },
     },
@@ -232,7 +406,6 @@ export const codeArtifact = new Artifact<'code', Metadata>({
         if (isCurrentVersion) {
           return true;
         }
-
         return false;
       },
     },

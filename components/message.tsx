@@ -61,10 +61,6 @@ const PurePreviewMessage = ({
             },
           )}
         >
-          {message.role === "assistant" && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background" />
-          )}
-
           <div
             className={cn("flex flex-col gap-4 w-full", {
               "min-h-96": message.role === "assistant" && requiresScrollPadding,
@@ -232,7 +228,6 @@ export const PreviewMessage = memo(PurePreviewMessage, (prevProps, nextProps) =>
 export const ThinkingMessage = () => {
   return (
     <div className="flex items-center gap-4 px-4 py-2">
-      <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background" />
       <div className="flex items-center gap-2">
         <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.3s]" />
         <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:-0.15s]" />

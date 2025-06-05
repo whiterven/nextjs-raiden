@@ -12,6 +12,7 @@ export type ArtifactActionContext<M = any> = {
   mode: 'edit' | 'diff';
   metadata: M;
   setMetadata: Dispatch<SetStateAction<M>>;
+  language?: string;
 };
 
 type ArtifactAction<M = any> = {
@@ -46,11 +47,13 @@ interface ArtifactContent<M = any> {
   isLoading: boolean;
   metadata: M;
   setMetadata: Dispatch<SetStateAction<M>>;
+  language?: string;
 }
 
 interface InitializeParameters<M = any> {
   documentId: string;
   setMetadata: Dispatch<SetStateAction<M>>;
+  language?: string;
 }
 
 type ArtifactConfig<T extends string, M = any> = {
