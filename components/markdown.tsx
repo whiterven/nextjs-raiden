@@ -1,3 +1,4 @@
+//components/markdown.tsx
 import Link from 'next/link';
 import React, { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
@@ -5,9 +6,21 @@ import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
 
 const components: Partial<Components> = {
-  // @ts-expect-error
-  code: CodeBlock,
-  pre: ({ children }) => <>{children}</>,
+  code: ({ node, className, children, ...props }) => {
+    // Check if it's an inline code element
+    const isInline = !className || !className.includes('language-');
+    
+    return (
+      <CodeBlock
+        inline={isInline}
+        className={className || ''}
+        {...props}
+      >
+        {children}
+      </CodeBlock>
+    );
+  },
+  // Remove the pre override as CodeBlock will handle its own container
   
   // Paragraphs with shadcn/ui typography
   p: ({ node, children, ...props }) => {
@@ -103,14 +116,39 @@ const components: Partial<Components> = {
     );
   },
 
-  // Links
-  a: ({ node, children, ...props }) => {
+  // Links with conditional rendering for Next.js Link
+  a: ({ node, children, href, ...props }) => {
+    // Handle undefined href case
+    if (!href) {
+      return (
+        <span className="text-blue-500 font-medium" {...props}>
+          {children}
+        </span>
+      );
+    }
+
+    // Check if it's an external link
+    const isExternal = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:');
+
+    if (isExternal) {
+      return (
+        <a
+          href={href}
+          className="text-blue-500 hover:underline font-medium underline underline-offset-4"
+          target="_blank"
+          rel="noreferrer"
+          {...props}
+        >
+          {children}
+        </a>
+      );
+    }
+
+    // Internal link using Next.js Link
     return (
-      // @ts-expect-error
       <Link
+        href={href}
         className="text-blue-500 hover:underline font-medium underline underline-offset-4"
-        target="_blank"
-        rel="noreferrer"
         {...props}
       >
         {children}

@@ -21,6 +21,12 @@ import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
+import { ChartVisualization } from './chart-visualization';
+
+// Extend Document type to include 'chart' kind until the schema update is fully propagated
+type DocumentWithChart = Omit<Document, 'kind'> & {
+  kind: 'text' | 'code' | 'image' | 'sheet' | 'chart';
+};
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -84,8 +90,8 @@ export function DocumentPreview({
     return <LoadingSkeleton artifactKind={result.kind ?? args.kind} />;
   }
 
-  const document: Document | null = previewDocument
-    ? previewDocument
+  const document: DocumentWithChart | null = previewDocument
+    ? previewDocument as DocumentWithChart
     : artifact.status === 'streaming'
       ? {
           title: artifact.title,
@@ -234,14 +240,14 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
   return true;
 });
 
-const DocumentContent = ({ document }: { document: Document }) => {
+const DocumentContent = ({ document }: { document: DocumentWithChart }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(
     'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
     {
       'p-4 sm:px-14 sm:py-16': document.kind === 'text',
-      'p-0': document.kind === 'code',
+      'p-0': document.kind === 'code' || document.kind === 'chart',
     },
   );
 
@@ -279,6 +285,18 @@ const DocumentContent = ({ document }: { document: Document }) => {
           status={artifact.status}
           isInline={true}
         />
+      ) : document.kind === 'chart' ? (
+        <div className="flex flex-1 relative size-full p-4">
+          <div className="absolute inset-0">
+            <ChartVisualization 
+              content={document.content ?? ''}
+              currentVersionIndex={0}
+              isCurrentVersion={true}
+              saveContent={() => {}}
+              status={artifact.status}
+            />
+          </div>
+        </div>
       ) : null}
     </div>
   );

@@ -1,13 +1,30 @@
-//components/code-block.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Check, Copy } from 'lucide-react';
 
+// CodeMirror imports
+import { EditorView, basicSetup } from 'codemirror';
+import { EditorState, Extension } from '@codemirror/state';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { javascript } from '@codemirror/lang-javascript';
+import { python } from '@codemirror/lang-python';
+import { html } from '@codemirror/lang-html';
+import { css } from '@codemirror/lang-css';
+import { json } from '@codemirror/lang-json';
+import { sql } from '@codemirror/lang-sql';
+import { xml } from '@codemirror/lang-xml';
+import { markdown } from '@codemirror/lang-markdown';
+import { php } from '@codemirror/lang-php';
+import { cpp } from '@codemirror/lang-cpp';
+import { java } from '@codemirror/lang-java';
+import { rust } from '@codemirror/lang-rust';
+import { go } from '@codemirror/lang-go';
+
 interface CodeBlockProps {
-  node: any;
-  inline: boolean;
-  className: string;
+  node?: any;
+  inline?: boolean;
+  className?: string;
   children: any;
 }
 
@@ -17,169 +34,149 @@ const getLanguageFromClassName = (className: string): string => {
   return match ? match[1] : '';
 };
 
-// Escape HTML to prevent XSS
-const escapeHtml = (text: string): string => {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+// Language extension mapping
+const getLanguageExtension = (language: string): Extension[] => {
+  const langMap: Record<string, Extension[]> = {
+    javascript: [javascript()],
+    js: [javascript()],
+    typescript: [javascript({ typescript: true })],
+    ts: [javascript({ typescript: true })],
+    jsx: [javascript({ jsx: true })],
+    tsx: [javascript({ typescript: true, jsx: true })],
+    python: [python()],
+    py: [python()],
+    html: [html()],
+    css: [css()],
+    json: [json()],
+    sql: [sql()],
+    xml: [xml()],
+    markdown: [markdown()],
+    md: [markdown()],
+    php: [php()],
+    cpp: [cpp()],
+    c: [cpp()],
+    java: [java()],
+    rust: [rust()],
+    rs: [rust()],
+    go: [go()],
+  };
+
+  return langMap[language.toLowerCase()] || [];
 };
 
-// Enhanced syntax highlighting with better patterns and colors
-const highlightCode = (code: string, language: string): string => {
+// Simple syntax highlighter fallback for when CodeMirror is not available
+const highlightCodeFallback = (code: string, language: string): string => {
+  // Basic HTML escaping
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   let highlightedCode = escapeHtml(code);
-  
-  // Language-specific highlighting patterns with distinct colors
+
   const patterns = {
     javascript: [
-      // Comments first (so they don't get overridden)
-      { regex: /\/\/.*$/gm, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      { regex: /\/\*[\s\S]*?\*\//g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Strings
-      { regex: /(['"`])((?:\\.|(?!\1)[^\\\\])*?)\1/g, replacement: '<span class="text-emerald-400">$&</span>' },
-      // Numbers
-      { regex: /\b\d+\.?\d*\b/g, replacement: '<span class="text-cyan-400">$&</span>' },
-      // Keywords
-      { regex: /\b(function|const|let|var|if|else|for|while|return|import|export|from|class|extends|async|await|try|catch|finally|new|this|super|static|public|private|protected)\b/g, replacement: '<span class="text-purple-400 font-medium">$1</span>' },
-      // Booleans and null
-      { regex: /\b(true|false|null|undefined)\b/g, replacement: '<span class="text-orange-400">$1</span>' },
-      // Function names
-      { regex: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g, replacement: '<span class="text-blue-300">$1</span>' },
+      { regex: /\/\/.*$/gm, className: 'text-gray-500 italic' },
+      { regex: /\/\*[\s\S]*?\*\//g, className: 'text-gray-500 italic' },
+      { regex: /(['"`])((?:\\.|(?!\1)[^\\])*?)\1/g, className: 'text-emerald-400' },
+      { regex: /\b\d+\.?\d*\b/g, className: 'text-cyan-400' },
+      { regex: /\b(function|const|let|var|if|else|for|while|return|import|export|class|async|await)\b/g, className: 'text-purple-400 font-medium' },
+      { regex: /\b(true|false|null|undefined)\b/g, className: 'text-orange-400' },
     ],
-    
-    typescript: [
-      // Comments
-      { regex: /\/\/.*$/gm, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      { regex: /\/\*[\s\S]*?\*\//g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Strings
-      { regex: /(['"`])((?:\\.|(?!\1)[^\\\\])*?)\1/g, replacement: '<span class="text-emerald-400">$&</span>' },
-      // Numbers
-      { regex: /\b\d+\.?\d*\b/g, replacement: '<span class="text-cyan-400">$&</span>' },
-      // TypeScript specific keywords
-      { regex: /\b(interface|type|enum|implements|namespace|declare|abstract|readonly|keyof|typeof|as|is|in|extends|implements)\b/g, replacement: '<span class="text-pink-400 font-medium">$1</span>' },
-      // General keywords
-      { regex: /\b(function|const|let|var|if|else|for|while|return|import|export|from|class|extends|async|await|try|catch|finally|new|this|super|static|public|private|protected)\b/g, replacement: '<span class="text-purple-400 font-medium">$1</span>' },
-      // Types
-      { regex: /\b(string|number|boolean|object|any|void|never|unknown|Array|Promise|Date|RegExp)\b/g, replacement: '<span class="text-yellow-400">$1</span>' },
-      // Booleans and null
-      { regex: /\b(true|false|null|undefined)\b/g, replacement: '<span class="text-orange-400">$1</span>' },
-      // Function names
-      { regex: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g, replacement: '<span class="text-blue-300">$1</span>' },
-    ],
-
     python: [
-      // Comments
-      { regex: /#.*$/gm, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Strings (including f-strings)
-      { regex: /f?['"`]((?:\\.|[^'"`\\\\])*?)['"`]/g, replacement: '<span class="text-emerald-400">$&</span>' },
-      // Numbers
-      { regex: /\b\d+\.?\d*\b/g, replacement: '<span class="text-cyan-400">$&</span>' },
-      // Keywords
-      { regex: /\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|lambda|and|or|not|in|is|pass|break|continue|global|nonlocal|assert|del|raise)\b/g, replacement: '<span class="text-purple-400 font-medium">$1</span>' },
-      // Built-in constants
-      { regex: /\b(True|False|None)\b/g, replacement: '<span class="text-orange-400">$1</span>' },
-      // Decorators
-      { regex: /@\w+/g, replacement: '<span class="text-yellow-400">$&</span>' },
-      // Function/class names
-      { regex: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g, replacement: '<span class="text-blue-300">$1</span>' },
+      { regex: /#.*$/gm, className: 'text-gray-500 italic' },
+      { regex: /(['"`])((?:\\.|[^'"`\\])*?)\1/g, className: 'text-emerald-400' },
+      { regex: /\b\d+\.?\d*\b/g, className: 'text-cyan-400' },
+      { regex: /\b(def|class|if|elif|else|for|while|try|except|import|return|and|or|not)\b/g, className: 'text-purple-400 font-medium' },
+      { regex: /\b(True|False|None)\b/g, className: 'text-orange-400' },
     ],
-
     html: [
-      // Comments
-      { regex: /&lt;!--[\s\S]*?--&gt;/g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Tag names
-      { regex: /&lt;\/?([\w-]+)/g, replacement: '&lt;<span class="text-red-400">$1</span>' },
-      // Attributes
-      { regex: /\s([\w-]+)=/g, replacement: ' <span class="text-yellow-400">$1</span>=' },
-      // Attribute values
-      { regex: /=(['"`])(.*?)\1/g, replacement: '=<span class="text-emerald-400">$1$2$1</span>' },
-      // Closing tags
-      { regex: /\/&gt;|&gt;/g, replacement: '<span class="text-gray-300">$&</span>' },
-    ],
-
-    css: [
-      // Comments
-      { regex: /\/\*[\s\S]*?\*\//g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Selectors
-      { regex: /^[\s]*([.#]?[\w-]+(?:\s*[>+~]\s*[\w-]+)*)\s*{/gm, replacement: '<span class="text-yellow-400">$1</span> {' },
-      // Properties
-      { regex: /([\w-]+)\s*:/g, replacement: '<span class="text-blue-400">$1</span>:' },
-      // Values
-      { regex: /:\s*([^;{]+);/g, replacement: ': <span class="text-emerald-400">$1</span>;' },
-      // Colors
-      { regex: /#[0-9a-fA-F]{3,6}\b/g, replacement: '<span class="text-pink-400">$&</span>' },
-      // Units
-      { regex: /\b\d+(?:px|em|rem|%|vh|vw|deg|s|ms)\b/g, replacement: '<span class="text-cyan-400">$&</span>' },
-    ],
-
-    jsx: [
-      // Comments
-      { regex: /\/\/.*$/gm, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      { regex: /\/\*[\s\S]*?\*\//g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // JSX Comments
-      { regex: /{\s*\/\*[\s\S]*?\*\/\s*}/g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Strings
-      { regex: /(['"`])((?:\\.|(?!\1)[^\\\\])*?)\1/g, replacement: '<span class="text-emerald-400">$&</span>' },
-      // JSX attributes
-      { regex: /\s([\w-]+)=/g, replacement: ' <span class="text-yellow-400">$1</span>=' },
-      // JSX tag names
-      { regex: /&lt;\/?([\w.]+)/g, replacement: '&lt;<span class="text-red-400">$1</span>' },
-      // Numbers
-      { regex: /\b\d+\.?\d*\b/g, replacement: '<span class="text-cyan-400">$&</span>' },
-      // Keywords
-      { regex: /\b(function|const|let|var|if|else|for|while|return|import|export|from|class|extends|async|await|try|catch|finally|new|this|super|static|public|private|protected)\b/g, replacement: '<span class="text-purple-400 font-medium">$1</span>' },
-      // React keywords
-      { regex: /\b(useState|useEffect|useContext|useReducer|useMemo|useCallback|useRef|Component|PureComponent|Fragment)\b/g, replacement: '<span class="text-pink-400 font-medium">$1</span>' },
-      // Booleans and null
-      { regex: /\b(true|false|null|undefined)\b/g, replacement: '<span class="text-orange-400">$1</span>' },
-    ],
-
-    json: [
-      // Strings (keys and values)
-      { regex: /("(?:\\.|[^"\\\\])*")\s*:/g, replacement: '<span class="text-blue-400">$1</span>:' },
-      { regex: /:\s*("(?:\\.|[^"\\\\])*")/g, replacement: ': <span class="text-emerald-400">$1</span>' },
-      // Numbers
-      { regex: /:\s*(-?\d+\.?\d*)/g, replacement: ': <span class="text-cyan-400">$1</span>' },
-      // Booleans and null
-      { regex: /:\s*(true|false|null)/g, replacement: ': <span class="text-orange-400">$1</span>' },
-      // Brackets and braces
-      { regex: /[{}[\]]/g, replacement: '<span class="text-gray-300 font-bold">$&</span>' },
-    ],
-
-    sql: [
-      // Comments
-      { regex: /--.*$/gm, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      { regex: /\/\*[\s\S]*?\*\//g, replacement: '<span class="text-gray-500 italic">$&</span>' },
-      // Strings
-      { regex: /('(?:[^'\\\\]|\\\\.)*')/g, replacement: '<span class="text-emerald-400">$1</span>' },
-      // Keywords
-      { regex: /\b(SELECT|FROM|WHERE|JOIN|INNER|LEFT|RIGHT|OUTER|ON|GROUP|BY|ORDER|HAVING|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TABLE|INDEX|DATABASE|UNION|DISTINCT|AS|AND|OR|NOT|IN|LIKE|BETWEEN|IS|NULL|TRUE|FALSE|COUNT|SUM|AVG|MAX|MIN)\b/gi, replacement: '<span class="text-purple-400 font-medium">$&</span>' },
-      // Numbers
-      { regex: /\b\d+\.?\d*\b/g, replacement: '<span class="text-cyan-400">$&</span>' },
+      { regex: /&lt;!--[\s\S]*?--&gt;/g, className: 'text-gray-500 italic' },
+      { regex: /&lt;\/?([\w-]+)/g, className: 'text-red-400' },
+      { regex: /\s([\w-]+)=/g, className: 'text-yellow-400' },
+      { regex: /=(['"`])(.*?)\1/g, className: 'text-emerald-400' },
     ],
   };
 
-  // Get patterns for the specified language, fallback to javascript
-  const languagePatterns = patterns[language as keyof typeof patterns] || patterns.javascript;
+  const languagePatterns = patterns[language as keyof typeof patterns] || [];
 
-  // Apply patterns in order
-  languagePatterns.forEach(({ regex, replacement }) => {
-    highlightedCode = highlightedCode.replace(regex, replacement);
+  languagePatterns.forEach(({ regex, className }) => {
+    highlightedCode = highlightedCode.replace(regex, (match) => {
+      return `<span class="${className}">${match}</span>`;
+    });
   });
 
   return highlightedCode;
 };
 
-export function CodeBlock({
-  node,
-  inline,
-  className,
-  children,
-  ...props
-}: CodeBlockProps) {
+export function CodeBlock({ node, inline, className, children, ...props }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
+  const [useCodeMirror, setUseCodeMirror] = useState(true);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
   
   const code = String(children).replace(/\n$/, '');
   const language = getLanguageFromClassName(className || '');
+
+  useEffect(() => {
+    if (!inline && editorRef.current && useCodeMirror) {
+      try {
+        // Clean up previous editor
+        if (viewRef.current) {
+          viewRef.current.destroy();
+        }
+
+        const languageExtensions = getLanguageExtension(language);
+        
+        const state = EditorState.create({
+          doc: code,
+          extensions: [
+            basicSetup,
+            oneDark,
+            ...languageExtensions,
+            EditorView.editable.of(false),
+            EditorView.theme({
+              '&': {
+                fontSize: '14px',
+              },
+              '.cm-content': {
+                padding: '12px',
+                minHeight: 'auto',
+              },
+              '.cm-focused': {
+                outline: 'none',
+              },
+              '.cm-editor': {
+                borderRadius: '0 0 0.75rem 0.75rem',
+              },
+              '.cm-scroller': {
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", monospace',
+              },
+            }),
+          ],
+        });
+
+        viewRef.current = new EditorView({
+          state,
+          parent: editorRef.current,
+        });
+      } catch (error) {
+        console.warn('CodeMirror failed to load, falling back to basic highlighting:', error);
+        setUseCodeMirror(false);
+      }
+    }
+
+    return () => {
+      if (viewRef.current) {
+        viewRef.current.destroy();
+        viewRef.current = null;
+      }
+    };
+  }, [code, language, inline, useCodeMirror]);
 
   const copyToClipboard = async () => {
     try {
@@ -202,28 +199,33 @@ export function CodeBlock({
     );
   }
 
-  const highlightedCode = language ? highlightCode(code, language) : escapeHtml(code);
-
   return (
-    <div className="not-prose flex flex-col my-6">
+    <div className="not-prose my-6 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900">
       {/* Header with language and copy button */}
-      <div className="flex items-center justify-between px-4 py-2 bg-zinc-800 dark:bg-zinc-900 border border-zinc-700 rounded-t-xl">
-        <span className="text-xs font-medium text-zinc-300 uppercase tracking-wide">
-          {language || 'text'}
-        </span>
+      <div className="flex items-center justify-between bg-zinc-800 px-4 py-3 border-b border-zinc-700">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <div className="h-3 w-3 rounded-full bg-red-500"></div>
+            <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+            <div className="h-3 w-3 rounded-full bg-green-500"></div>
+          </div>
+          <span className="text-sm font-medium text-zinc-300 ml-2">
+            {language || 'text'}
+          </span>
+        </div>
         <button
           onClick={copyToClipboard}
-          className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-100 transition-colors rounded hover:bg-zinc-700"
+          className="flex items-center gap-2 rounded-md bg-zinc-700 px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-zinc-600 hover:text-zinc-100"
           title="Copy code"
         >
           {copied ? (
             <>
-              <Check size={12} />
-              Copied
+              <Check size={14} />
+              Copied!
             </>
           ) : (
             <>
-              <Copy size={12} />
+              <Copy size={14} />
               Copy
             </>
           )}
@@ -231,17 +233,18 @@ export function CodeBlock({
       </div>
       
       {/* Code content */}
-      <pre
-        {...props}
-        className="text-sm w-full overflow-x-auto bg-zinc-900 dark:bg-zinc-950 p-4 border-l border-r border-b border-zinc-700 rounded-b-xl text-zinc-100 font-mono leading-relaxed"
-      >
-        <code 
-          className="whitespace-pre-wrap break-words"
-          dangerouslySetInnerHTML={{ 
-            __html: highlightedCode
-          }}
-        />
-      </pre>
+      {useCodeMirror ? (
+        <div ref={editorRef} className="overflow-hidden" />
+      ) : (
+        <pre className="overflow-x-auto bg-zinc-900 p-4 text-sm leading-relaxed">
+          <code 
+            className="font-mono text-zinc-100"
+            dangerouslySetInnerHTML={{ 
+              __html: highlightCodeFallback(code, language)
+            }}
+          />
+        </pre>
+      )}
     </div>
   );
 }
