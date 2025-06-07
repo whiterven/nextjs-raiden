@@ -11,6 +11,7 @@ import { AppearanceForm } from '@/components/settings/appearance-form';
 import { AccountForm } from '@/components/settings/account-form';
 import { NotificationsForm } from '@/components/settings/notifications-form';
 import { LanguageForm } from '@/components/settings/language-form';
+import { ApiKeysForm } from '@/components/settings/api-keys-form';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -109,6 +110,13 @@ export default function SettingsPage() {
                     >
                       Language
                     </Button>
+                    <Button 
+                      variant={activeTab === "api-keys" ? "default" : "ghost"} 
+                      className="justify-start" 
+                      onClick={() => setActiveTab("api-keys")}
+                    >
+                      API Keys
+                    </Button>
                   </div>
                 </div>
               </SheetContent>
@@ -129,6 +137,9 @@ export default function SettingsPage() {
           <TabsContent value="language" className="space-y-4 md:space-y-6">
             <LanguageForm />
           </TabsContent>
+          <TabsContent value="api-keys" className="space-y-4 md:space-y-6">
+            <ApiKeysForm />
+          </TabsContent>
         </Tabs>
       ) : (
         // Desktop: Use standard tabs
@@ -140,6 +151,7 @@ export default function SettingsPage() {
               <TabsTrigger value="appearance" className="text-sm">Appearance</TabsTrigger>
               <TabsTrigger value="notifications" className="text-sm">Notifications</TabsTrigger>
               <TabsTrigger value="language" className="text-sm">Language</TabsTrigger>
+              <TabsTrigger value="api-keys" className="text-sm">API Keys</TabsTrigger>
             </TabsList>
           </ScrollArea>
           <TabsContent value="profile" className="space-y-4 md:space-y-6">
@@ -156,6 +168,9 @@ export default function SettingsPage() {
           </TabsContent>
           <TabsContent value="language" className="space-y-4 md:space-y-6">
             <LanguageForm />
+          </TabsContent>
+          <TabsContent value="api-keys" className="space-y-4 md:space-y-6">
+            <ApiKeysForm />
           </TabsContent>
         </Tabs>
       )}

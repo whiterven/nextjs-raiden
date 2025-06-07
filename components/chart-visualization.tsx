@@ -104,8 +104,25 @@ export function ChartVisualization({
         console.error('Chart received CSV-like data:', content);
         return;
       }
-      
-      const parsedConfig = JSON.parse(content) as ChartConfig;
+
+      // Try to parse the JSON content with extra validation
+      let parsedConfig;
+      try {
+        parsedConfig = JSON.parse(content);
+      } catch (parseErr) {
+        // If the content isn't valid JSON, try to extract JSON from it
+        // Sometimes the model might wrap JSON in text explanations
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            parsedConfig = JSON.parse(jsonMatch[0]);
+          } catch (extractErr) {
+            throw new Error(`Failed to parse JSON: ${parseErr instanceof Error ? parseErr.message : 'Unknown parsing error'}`);
+          }
+        } else {
+          throw new Error(`Invalid JSON format: ${parseErr instanceof Error ? parseErr.message : 'Unknown parsing error'}`);
+        }
+      }
       
       // Validate required fields
       if (!parsedConfig.type || !parsedConfig.data || !Array.isArray(parsedConfig.data)) {
@@ -153,10 +170,20 @@ export function ChartVisualization({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-        <div className="text-center">
+      <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="text-center p-6 max-w-md">
           <div className="text-red-500 text-lg font-semibold mb-2">Chart Error</div>
           <div className="text-gray-600">{error}</div>
+          {content && (
+            <div className="mt-4">
+              <details className="text-left">
+                <summary className="cursor-pointer text-sm text-blue-500 hover:text-blue-700">View Raw Content</summary>
+                <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-32 whitespace-pre-wrap break-all">
+                  {typeof content === 'string' ? content.substring(0, 500) + (content.length > 500 ? '...' : '') : 'Non-string content'}
+                </pre>
+              </details>
+            </div>
+          )}
         </div>
       </div>
     );

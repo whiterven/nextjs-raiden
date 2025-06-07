@@ -28,6 +28,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
+import { ModelSelector } from './model-selector';
+import { type Session } from 'next-auth';
 
 function PureMultimodalInput({
   chatId,
@@ -43,6 +45,8 @@ function PureMultimodalInput({
   handleSubmit,
   className,
   selectedVisibilityType,
+  session,
+  selectedModelId,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -57,6 +61,8 @@ function PureMultimodalInput({
   handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
   selectedVisibilityType: VisibilityType;
+  session: Session;
+  selectedModelId: string;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -64,7 +70,7 @@ function PureMultimodalInput({
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      const maxHeight = width && width > 768 ? 200 : 150;
+      const maxHeight = width && width > 768 ? 300 : 200;
       const newHeight = Math.min(textareaRef.current.scrollHeight + 2, maxHeight);
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -79,7 +85,7 @@ function PureMultimodalInput({
   const resetHeight = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = width && width > 768 ? '48px' : '36px';
+      textareaRef.current.style.height = width && width > 768 ? '60px' : '48px';
     }
   }, [width]);
 
@@ -198,122 +204,122 @@ function PureMultimodalInput({
   }, [status, scrollToBottom]);
 
   return (
-    <div className="relative w-full flex flex-col gap-4">
+    <div
+      className={cx(
+        'flex flex-col w-full gap-3 relative',
+        {
+          'opacity-50': status === 'streaming',
+        },
+        className,
+      )}
+    >
+      <div className="absolute right-0 bottom-full mb-2">
+        <MessageLimitWarning />
+      </div>
+
       <AnimatePresence>
         {!isAtBottom && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="absolute left-1/2 bottom-28 -translate-x-1/2 z-50"
+            className="absolute bottom-full right-0 mb-2"
           >
             <Button
-              data-testid="scroll-to-bottom-button"
-              className="rounded-full"
+              onClick={() => scrollToBottom()}
               size="icon"
               variant="outline"
-              onClick={(event) => {
-                event.preventDefault();
-                scrollToBottom();
-              }}
+              className="rounded-full h-8 w-8 bg-background"
             >
-              <ArrowDown />
+              <ArrowDown size={16} />
             </Button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {messages.length === 0 &&
-        attachments.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions
-            append={append}
-            chatId={chatId}
-            selectedVisibilityType={selectedVisibilityType}
-          />
-        )}
+      {messages.length === 0 && (
+        <SuggestedActions
+          chatId={chatId}
+          append={append}
+          selectedVisibilityType={selectedVisibilityType}
+        />
+      )}
 
-      <MessageLimitWarning />
+      <div className="flex flex-wrap gap-2">
+        {attachments.map((attachment) => (
+          <PreviewAttachment
+            key={attachment.url}
+            attachment={attachment}
+            isUploading={false}
+            onRemove={() => {
+              setAttachments((currentAttachments) =>
+                currentAttachments.filter((a) => a.url !== attachment.url)
+              );
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative flex flex-row items-end gap-2">
+        <Textarea
+          ref={textareaRef}
+          tabIndex={0}
+          placeholder="Send a message"
+          className="min-h-[48px] md:min-h-[60px] py-2 md:py-3 pl-12 md:pl-14 pr-24 md:pr-32 resize-none bg-background rounded-xl border border-input"
+          value={input}
+          onChange={handleInput}
+          onKeyDown={(event) => {
+            if (
+              (event.key === 'Enter' && !event.shiftKey && input.trim() && status !== 'streaming') ||
+              ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && input.trim() && status !== 'streaming')
+            ) {
+              event.preventDefault();
+              submitForm();
+            }
+          }}
+          disabled={
+            uploadQueue.length > 0 ||
+            status === 'streaming'
+          }
+          style={{ padding: width && width < 768 ? '14px 16px' : '16px 16px' }}
+        />
+
+        <div className="absolute left-2 md:left-4 bottom-1.5 md:bottom-2.5 flex items-center">
+          <AttachmentsButton
+            fileInputRef={fileInputRef}
+            status={status}
+          />
+        </div>
+
+        <div className="absolute right-12 md:right-16 bottom-1.5 md:bottom-2.5 flex items-center">
+          <ModelSelector 
+            session={session} 
+            selectedModelId={selectedModelId} 
+            className="h-7 text-xs md:text-sm border-none shadow-none" 
+          />
+        </div>
+
+        <div className="absolute right-2 md:right-4 bottom-1.5 md:bottom-2.5 flex items-center">
+          {status === 'streaming' ? (
+            <StopButton stop={stop} setMessages={setMessages} />
+          ) : (
+            <SendButton
+              submitForm={submitForm}
+              input={input}
+              uploadQueue={uploadQueue}
+            />
+          )}
+        </div>
+      </div>
 
       <input
         type="file"
-        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
-        ref={fileInputRef}
         multiple
+        ref={fileInputRef}
+        className="hidden"
         onChange={handleFileChange}
-        tabIndex={-1}
+        disabled={status === 'streaming'}
       />
-
-      {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div
-          data-testid="attachments-preview"
-          className="flex flex-row gap-2 overflow-x-scroll items-end"
-        >
-          {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
-          ))}
-
-          {uploadQueue.map((filename) => (
-            <PreviewAttachment
-              key={filename}
-              attachment={{
-                url: '',
-                name: filename,
-                contentType: '',
-              }}
-              isUploading={true}
-            />
-          ))}
-        </div>
-      )}
-
-      <Textarea
-        data-testid="multimodal-input"
-        ref={textareaRef}
-        placeholder="Send a message..."
-        value={input}
-        onChange={handleInput}
-        className={cx(
-          'min-h-[24px] max-h-[200px] md:max-h-[200px] max-h-[150px] resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700 text-sm md:text-base',
-          'scrollbar-hide hover:scrollbar-default transition-all',
-          input.split('\n').length > 4 && 'scrollbar-default',
-          className,
-        )}
-        rows={2}
-        autoFocus
-        onKeyDown={(event) => {
-          if (
-            event.key === 'Enter' &&
-            !event.shiftKey &&
-            !event.nativeEvent.isComposing
-          ) {
-            event.preventDefault();
-
-            if (status !== 'ready') {
-              toast.error('Please wait for the model to finish its response!');
-            } else {
-              submitForm();
-            }
-          }
-        }}
-      />
-
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-      </div>
-
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === 'submitted' ? (
-          <StopButton stop={stop} setMessages={setMessages} />
-        ) : (
-          <SendButton
-            input={input}
-            submitForm={submitForm}
-            uploadQueue={uploadQueue}
-          />
-        )}
-      </div>
     </div>
   );
 }

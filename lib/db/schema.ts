@@ -1,3 +1,4 @@
+//lib/db/schema.ts
 import type { InferSelectModel } from 'drizzle-orm';
 import {
   pgTable,
@@ -24,11 +25,24 @@ export const user = pgTable('User', {
   marketingEmails: boolean('marketingEmails').default(false),
   socialEmails: boolean('socialEmails').default(false),
   securityEmails: boolean('securityEmails').default(true),
+  avatarUrl: text('avatarUrl'),
+  bio: varchar('bio', { length: 500 }),
+  timezone: varchar('timezone', { length: 50 }),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+});
+
+export const securedApiKey = pgTable('SecuredApiKey', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId').notNull().references(() => user.id),
+  service: varchar('service', { length: 50 }).notNull(),
+  encryptedKey: text('encryptedKey').notNull(),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 });
 
 export type User = InferSelectModel<typeof user>;
+export type SecuredApiKey = InferSelectModel<typeof securedApiKey>;
 
 export const chat = pgTable('Chat', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),

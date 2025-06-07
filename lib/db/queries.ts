@@ -61,7 +61,10 @@ export async function getUser(email: string): Promise<Array<User>> {
         securityEmails: user.securityEmails ?? null,
         type: user.type,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
+        avatarUrl: user.avatarUrl ?? null,
+        bio: user.bio ?? null,
+        timezone: user.timezone ?? null
       })
       .from(user)
       .where(eq(user.email, email));

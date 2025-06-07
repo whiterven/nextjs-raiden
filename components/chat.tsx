@@ -118,27 +118,32 @@ export function Chat({
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh bg-background">
+      <div className="flex flex-col min-w-0 h-dvh bg-background overflow-hidden">
         <ChatHeader
           chatId={id}
           selectedModelId={initialChatModel}
           selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
           session={session}
+          hideModelSelector={true}
         />
 
-        <Messages
-          chatId={id}
-          status={status}
-          votes={votes}
-          messages={messages}
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-          isArtifactVisible={isArtifactVisible}
-        />
+        <div className="flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth">
+          <div className="absolute inset-0">
+            <Messages
+              chatId={id}
+              status={status}
+              votes={votes}
+              messages={messages}
+              setMessages={setMessages}
+              reload={reload}
+              isReadonly={isReadonly}
+              isArtifactVisible={isArtifactVisible}
+            />
+          </div>
+        </div>
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+        <form className="flex mx-auto px-4 bg-background py-2 pb-4 md:pb-6 gap-2 w-full md:max-w-3xl shrink-0 border-t">
           {!isReadonly && (
             <MultimodalInput
               chatId={id}
@@ -153,6 +158,8 @@ export function Chat({
               setMessages={setMessages}
               append={append}
               selectedVisibilityType={visibilityType}
+              session={session}
+              selectedModelId={initialChatModel}
             />
           )}
         </form>
@@ -174,6 +181,8 @@ export function Chat({
         votes={votes}
         isReadonly={isReadonly}
         selectedVisibilityType={visibilityType}
+        session={session}
+        initialChatModel={initialChatModel}
       />
     </>
   );

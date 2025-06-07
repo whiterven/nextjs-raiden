@@ -26,6 +26,14 @@ const profileSchema = z.object({
     .string()
     .min(1, { message: "This field cannot be empty." })
     .email("This is not a valid email."),
+  bio: z
+    .string()
+    .max(500, { message: "Bio must not be longer than 500 characters." })
+    .optional(),
+  timezone: z
+    .string()
+    .max(50, { message: "Timezone must not be longer than 50 characters." })
+    .optional(),
 });
 
 export async function PUT(req: Request) {
@@ -45,6 +53,9 @@ export async function PUT(req: Request) {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         email: validatedData.email,
+        bio: validatedData.bio,
+        timezone: validatedData.timezone,
+        updatedAt: new Date(),
       })
       .where(eq(user.id, session.user.id));
 

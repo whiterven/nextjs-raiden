@@ -42,40 +42,42 @@ function PureMessages({
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4 relative"
+      className="flex flex-col min-w-0 w-full gap-6 flex-1 overflow-y-auto pt-4 pb-6 md:pb-10 px-2 md:px-0 relative"
     >
-      {messages.length === 0 && <Greeting />}
+      <div className="flex flex-col w-full mx-auto max-w-3xl gap-6">
+        {messages.length === 0 && <Greeting />}
 
-      {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          isLoading={status === 'streaming' && messages.length - 1 === index}
-          vote={
-            votes
-              ? votes.find((vote) => vote.messageId === message.id)
-              : undefined
-          }
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-          requiresScrollPadding={
-            hasSentMessage && index === messages.length - 1
-          }
+        {messages.map((message, index) => (
+          <PreviewMessage
+            key={message.id}
+            chatId={chatId}
+            message={message}
+            isLoading={status === 'streaming' && messages.length - 1 === index}
+            vote={
+              votes
+                ? votes.find((vote) => vote.messageId === message.id)
+                : undefined
+            }
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+            requiresScrollPadding={
+              hasSentMessage && index === messages.length - 1
+            }
+          />
+        ))}
+
+        {status === 'submitted' &&
+          messages.length > 0 &&
+          messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+
+        <motion.div
+          ref={messagesEndRef}
+          className="shrink-0 min-w-[24px] min-h-[24px]"
+          onViewportLeave={onViewportLeave}
+          onViewportEnter={onViewportEnter}
         />
-      ))}
-
-      {status === 'submitted' &&
-        messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
-
-      <motion.div
-        ref={messagesEndRef}
-        className="shrink-0 min-w-[24px] min-h-[24px]"
-        onViewportLeave={onViewportLeave}
-        onViewportEnter={onViewportEnter}
-      />
+      </div>
     </div>
   );
 }

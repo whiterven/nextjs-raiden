@@ -1,3 +1,4 @@
+//components/model-selector.tsx
 "use client"
 
 import type React from "react"
@@ -35,6 +36,8 @@ export function ModelSelector({
     () => availableChatModels.find((chatModel) => chatModel.id === optimisticModelId),
     [optimisticModelId, availableChatModels],
   )
+  
+  const isCompact = className?.includes('text-xs') || className?.includes('h-7')
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -42,17 +45,25 @@ export function ModelSelector({
         asChild
         className={cn("w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground", className)}
       >
-        <Button data-testid="model-selector" variant="outline" className="md:px-2 md:h-[34px] gap-2">
+        <Button 
+          data-testid="model-selector" 
+          variant="outline" 
+          className={cn(
+            "md:px-2 md:h-[34px] gap-1 text-xs", 
+            isCompact ? "px-1.5 py-1 h-6 text-xs" : "",
+            className
+          )}
+        >
           {(() => {
             const IconComponent = getModelIcon(optimisticModelId)
             return IconComponent ? <IconComponent /> : null
           })()}
-          <span className="hidden sm:inline">{selectedChatModel?.name}</span>
-          <span className="sm:hidden">{selectedChatModel?.name?.split(" ")[0]}</span>
-          <ChevronDownIcon />
+          <span className="hidden sm:inline text-xs">{isCompact ? selectedChatModel?.name?.split(" ")[0] : selectedChatModel?.name}</span>
+          <span className="sm:hidden text-xs">{selectedChatModel?.name?.split(" ")[0]}</span>
+          <ChevronDownIcon size={isCompact ? 12 : 16} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[300px] max-h-[400px] overflow-y-auto">
+      <DropdownMenuContent align="start" className="min-w-[250px] max-h-[400px] overflow-y-auto">
         {availableChatModels.map((chatModel) => {
           const { id } = chatModel
 
@@ -80,13 +91,13 @@ export function ModelSelector({
                     })()}
                   </div>
                   <div className="flex flex-col gap-1 items-start">
-                    <div className="text-sm font-medium">{chatModel.name}</div>
+                    <div className="text-xs font-medium">{chatModel.name}</div>
                     <div className="text-xs text-muted-foreground">{chatModel.description}</div>
                   </div>
                 </div>
 
                 <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-                  <CheckCircleFillIcon />
+                  <CheckCircleFillIcon size={14} />
                 </div>
               </button>
             </DropdownMenuItem>

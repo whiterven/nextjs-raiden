@@ -46,6 +46,15 @@ CREATE TABLE IF NOT EXISTS "payment" (
 	"stripe_invoice_id" text
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "SecuredApiKey" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"userId" uuid NOT NULL,
+	"service" varchar(50) NOT NULL,
+	"encryptedKey" text NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL,
+	"updatedAt" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Stream" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"chatId" uuid NOT NULL,
@@ -99,6 +108,9 @@ CREATE TABLE IF NOT EXISTS "User" (
 	"marketingEmails" boolean DEFAULT false,
 	"socialEmails" boolean DEFAULT false,
 	"securityEmails" boolean DEFAULT true,
+	"avatarUrl" text,
+	"bio" varchar(500),
+	"timezone" varchar(50),
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
@@ -143,6 +155,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "payment" ADD CONSTRAINT "payment_user_id_User_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SecuredApiKey" ADD CONSTRAINT "SecuredApiKey_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
