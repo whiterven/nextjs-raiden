@@ -1,3 +1,4 @@
+//lib/db/queries.ts
 import 'server-only';
 
 import {
@@ -28,6 +29,10 @@ import {
   type Chat,
   stream,
   payment,
+  oauthToken,
+  oauthState,
+  type OAuthToken,
+  type OAuthState,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
@@ -616,6 +621,255 @@ export async function getPaymentsByUserId({
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get payments by user id',
+    );
+  }
+}
+
+// OAuth Token Management
+export async function saveOAuthToken({
+  userId,
+  provider,
+  accessToken,
+  refreshToken,
+  expiresAt,
+  scope,
+  tokenType = 'Bearer'
+}: {
+  userId: string;
+  provider: string;
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: Date;
+  scope?: string;
+  tokenType?: string;
+}) {
+  try {
+    return await db
+      .insert(oauthToken)
+      .values({
+        userId,
+        provider,
+        accessToken,
+        refreshToken: refreshToken || null,
+        expiresAt: expiresAt || null,
+        scope: scope || null,
+        tokenType,
+        updatedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: [oauthToken.userId, oauthToken.provider],
+        set: {
+          accessToken,
+          refreshToken: refreshToken || null,
+          expiresAt: expiresAt || null,
+          scope: scope || null,
+          tokenType,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+  } catch (error) {
+    console.error('Database error in saveOAuthToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to save OAuth token'
+    );
+  }
+}
+
+export async function getOAuthToken({
+  userId,
+  provider
+}: {
+  userId: string;
+  provider: string;
+}) {
+  try {
+    const [token] = await db
+      .select()
+      .from(oauthToken)
+      .where(
+        and(
+          eq(oauthToken.userId, userId),
+          eq(oauthToken.provider, provider)
+        )
+      );
+    return token;
+  } catch (error) {
+    console.error('Database error in getOAuthToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get OAuth token'
+    );
+  }
+}
+
+export async function getUserOAuthTokens({ userId }: { userId: string }) {
+  try {
+    return await db
+      .select({
+        provider: oauthToken.provider,
+        scope: oauthToken.scope,
+        expiresAt: oauthToken.expiresAt,
+        createdAt: oauthToken.createdAt,
+        updatedAt: oauthToken.updatedAt
+      })
+      .from(oauthToken)
+      .where(eq(oauthToken.userId, userId));
+  } catch (error) {
+    console.error('Database error in getUserOAuthTokens:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get user OAuth tokens'
+    );
+  }
+}
+
+export async function deleteOAuthToken({
+  userId,
+  provider
+}: {
+  userId: string;
+  provider: string;
+}) {
+  try {
+    return await db
+      .delete(oauthToken)
+      .where(
+        and(
+          eq(oauthToken.userId, userId),
+          eq(oauthToken.provider, provider)
+        )
+      )
+      .returning();
+  } catch (error) {
+    console.error('Database error in deleteOAuthToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to delete OAuth token'
+    );
+  }
+}
+
+export async function refreshOAuthToken({
+  userId,
+  provider,
+  accessToken,
+  refreshToken,
+  expiresAt
+}: {
+  userId: string;
+  provider: string;
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt?: Date;
+}) {
+  try {
+    return await db
+      .update(oauthToken)
+      .set({
+        accessToken,
+        refreshToken: refreshToken || undefined,
+        expiresAt: expiresAt || undefined,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(oauthToken.userId, userId),
+          eq(oauthToken.provider, provider)
+        )
+      )
+      .returning();
+  } catch (error) {
+    console.error('Database error in refreshOAuthToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to refresh OAuth token'
+    );
+  }
+}
+
+// OAuth State Management (for security)
+export async function saveOAuthState({
+  userId,
+  provider,
+  state,
+  codeVerifier,
+  scopes,
+  expiresAt
+}: {
+  userId: string;
+  provider: string;
+  state: string;
+  codeVerifier?: string;
+  scopes?: string;
+  expiresAt: Date;
+}) {
+  try {
+    return await db
+      .insert(oauthState)
+      .values({
+        userId,
+        provider,
+        state,
+        codeVerifier: codeVerifier || null,
+        scopes: scopes || null,
+        expiresAt
+      })
+      .returning();
+  } catch (error) {
+    console.error('Database error in saveOAuthState:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to save OAuth state'
+    );
+  }
+}
+
+export async function verifyAndConsumeOAuthState({
+  userId,
+  provider,
+  state
+}: {
+  userId: string;
+  provider: string;
+  state: string;
+}) {
+  try {
+    // Get and delete the state in one transaction
+    const [stateRecord] = await db
+      .delete(oauthState)
+      .where(
+        and(
+          eq(oauthState.userId, userId),
+          eq(oauthState.provider, provider),
+          eq(oauthState.state, state),
+          gt(oauthState.expiresAt, new Date()) // Must not be expired
+        )
+      )
+      .returning();
+
+    return stateRecord;
+  } catch (error) {
+    console.error('Database error in verifyAndConsumeOAuthState:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to verify OAuth state'
+    );
+  }
+}
+
+export async function cleanupExpiredOAuthStates() {
+  try {
+    return await db
+      .delete(oauthState)
+      .where(lt(oauthState.expiresAt, new Date()))
+      .returning();
+  } catch (error) {
+    console.error('Database error in cleanupExpiredOAuthStates:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to cleanup expired OAuth states'
     );
   }
 }

@@ -6,27 +6,69 @@ import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import crypto from 'crypto';
 
-// Simple encryption for API keys
-// In a production environment, consider using a more robust solution like AWS KMS
+// Improved encryption for API keys with proper key length handling
 function encryptApiKey(apiKey: string): string {
-  const algorithm = 'aes-256-cbc';
-  const key = Buffer.from(process.env.ENCRYPTION_KEY || 'default-encryption-key-must-be-32-chars', 'utf-8');
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(algorithm, key, iv);
-  let encrypted = cipher.update(apiKey, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return `${iv.toString('hex')}:${encrypted}`;
+  try {
+    const algorithm = 'aes-256-cbc';
+    // Ensure key is exactly 32 bytes (256 bits) as required by AES-256
+    let encryptionKey = process.env.ENCRYPTION_KEY || 'default-encryption-key-must-be-32-chars';
+    
+    // Ensure the key is exactly 32 bytes by either truncating or padding
+    if (encryptionKey.length > 32) {
+      encryptionKey = encryptionKey.slice(0, 32);
+    } else if (encryptionKey.length < 32) {
+      encryptionKey = encryptionKey.padEnd(32, '0');
+    }
+    
+    const key = Buffer.from(encryptionKey, 'utf-8');
+    const iv = crypto.randomBytes(16); // 16 bytes IV for AES
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    
+    let encrypted = cipher.update(apiKey, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    // Return IV and encrypted content, both hex encoded
+    return `${iv.toString('hex')}:${encrypted}`;
+  } catch (error) {
+    console.error('Encryption error:', error);
+    throw new Error('Failed to encrypt API key');
+  }
 }
 
 function decryptApiKey(encryptedData: string): string {
-  const algorithm = 'aes-256-cbc';
-  const key = Buffer.from(process.env.ENCRYPTION_KEY || 'default-encryption-key-must-be-32-chars', 'utf-8');
-  const [ivHex, encryptedHex] = encryptedData.split(':');
-  const iv = Buffer.from(ivHex, 'hex');
-  const decipher = crypto.createDecipheriv(algorithm, key, iv);
-  let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
+  try {
+    const algorithm = 'aes-256-cbc';
+    
+    // Ensure key is exactly 32 bytes (256 bits) as required by AES-256
+    let encryptionKey = process.env.ENCRYPTION_KEY || 'default-encryption-key-must-be-32-chars';
+    
+    // Ensure the key is exactly 32 bytes by either truncating or padding
+    if (encryptionKey.length > 32) {
+      encryptionKey = encryptionKey.slice(0, 32);
+    } else if (encryptionKey.length < 32) {
+      encryptionKey = encryptionKey.padEnd(32, '0');
+    }
+    
+    const key = Buffer.from(encryptionKey, 'utf-8');
+    
+    // Split the stored data into IV and encrypted content
+    const parts = encryptedData.split(':');
+    if (parts.length !== 2) {
+      throw new Error('Invalid encrypted data format');
+    }
+    
+    const [ivHex, encryptedHex] = parts;
+    const iv = Buffer.from(ivHex, 'hex');
+    
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  } catch (error) {
+    console.error('Decryption error:', error);
+    throw new Error('Failed to decrypt API key');
+  }
 }
 
 const apiKeySchema = z.object({
@@ -54,7 +96,10 @@ export async function GET() {
     return NextResponse.json(keys);
   } catch (error) {
     console.error("Error fetching API keys:", error);
-    return new NextResponse("Failed to fetch API keys", { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch API keys" }, 
+      { status: 500 }
+    );
   }
 }
 
@@ -63,7 +108,10 @@ export async function POST(req: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const body = await req.json();
@@ -81,8 +129,8 @@ export async function POST(req: Request) {
       );
 
     if (existingKeys.length > 0) {
-      return new NextResponse(
-        "A key for this service already exists. Delete it first to add a new one.",
+      return NextResponse.json(
+        { error: "A key for this service already exists. Delete it first to add a new one." },
         { status: 400 }
       );
     }
@@ -99,13 +147,22 @@ export async function POST(req: Request) {
       updatedAt: new Date(),
     });
 
-    return new NextResponse("API key added successfully", { status: 201 });
+    return NextResponse.json(
+      { message: "API key added successfully" },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.errors), { status: 400 });
+      return NextResponse.json(
+        { error: "Validation error", details: error.errors },
+        { status: 400 }
+      );
     }
     console.error("Error adding API key:", error);
-    return new NextResponse("Failed to add API key", { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to add API key" },
+      { status: 500 }
+    );
   }
 }
 
@@ -114,14 +171,20 @@ export async function DELETE(req: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(req.url);
     const keyId = searchParams.get('id');
 
     if (!keyId) {
-      return new NextResponse("API key ID is required", { status: 400 });
+      return NextResponse.json(
+        { error: "API key ID is required" },
+        { status: 400 }
+      );
     }
 
     // Ensure the user owns this key before deleting
@@ -136,7 +199,10 @@ export async function DELETE(req: Request) {
       );
 
     if (existingKey.length === 0) {
-      return new NextResponse("API key not found", { status: 404 });
+      return NextResponse.json(
+        { error: "API key not found" },
+        { status: 404 }
+      );
     }
 
     // Delete the key
@@ -149,10 +215,16 @@ export async function DELETE(req: Request) {
         )
       );
 
-    return new NextResponse("API key deleted successfully", { status: 200 });
+    return NextResponse.json(
+      { message: "API key deleted successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error deleting API key:", error);
-    return new NextResponse("Failed to delete API key", { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete API key" },
+      { status: 500 }
+    );
   }
 }
 
@@ -161,7 +233,10 @@ export async function PATCH(req: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     // Check if we're getting the service from query params
@@ -175,7 +250,10 @@ export async function PATCH(req: Request) {
     }
 
     if (!service) {
-      return new NextResponse("Service name is required", { status: 400 });
+      return NextResponse.json(
+        { error: "Service name is required" },
+        { status: 400 }
+      );
     }
 
     // Find the key for this service
@@ -190,22 +268,36 @@ export async function PATCH(req: Request) {
       );
 
     if (keys.length === 0) {
-      return new NextResponse("API key not found", { status: 404 });
+      return NextResponse.json(
+        { error: "API key not found" },
+        { status: 404 }
+      );
     }
 
-    // Decrypt the key
-    const decryptedKey = decryptApiKey(keys[0].encryptedKey);
-
-    // Only return the last 4 characters, masking the rest
-    const maskedKey = `...${decryptedKey.slice(-4)}`;
-
-    return NextResponse.json({ 
-      id: keys[0].id,
-      service: keys[0].service,
-      maskedKey
-    });
+    try {
+      // Decrypt the key
+      const decryptedKey = decryptApiKey(keys[0].encryptedKey);
+      
+      // Only return the last 4 characters, masking the rest
+      const maskedKey = `...${decryptedKey.slice(-4)}`;
+      
+      return NextResponse.json({ 
+        id: keys[0].id,
+        service: keys[0].service,
+        maskedKey
+      });
+    } catch (decryptError) {
+      console.error("Error decrypting API key:", decryptError);
+      return NextResponse.json(
+        { error: "Could not retrieve the API key" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("Error retrieving API key:", error);
-    return new NextResponse("Failed to retrieve API key", { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to retrieve API key" },
+      { status: 500 }
+    );
   }
 } 

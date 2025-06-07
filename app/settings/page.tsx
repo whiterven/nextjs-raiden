@@ -12,6 +12,7 @@ import { AccountForm } from '@/components/settings/account-form';
 import { NotificationsForm } from '@/components/settings/notifications-form';
 import { LanguageForm } from '@/components/settings/language-form';
 import { ApiKeysForm } from '@/components/settings/api-keys-form';
+import IntegrationsManager from '@/components/settings/integrations-manager';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -117,6 +118,13 @@ export default function SettingsPage() {
                     >
                       API Keys
                     </Button>
+                    <Button 
+                      variant={activeTab === "integrations" ? "default" : "ghost"} 
+                      className="justify-start" 
+                      onClick={() => setActiveTab("integrations")}
+                    >
+                      Integrations
+                    </Button>
                   </div>
                 </div>
               </SheetContent>
@@ -140,6 +148,9 @@ export default function SettingsPage() {
           <TabsContent value="api-keys" className="space-y-4 md:space-y-6">
             <ApiKeysForm />
           </TabsContent>
+          <TabsContent value="integrations" className="space-y-4 md:space-y-6">
+            <IntegrationsManager />
+          </TabsContent>
         </Tabs>
       ) : (
         // Desktop: Use standard tabs
@@ -152,6 +163,7 @@ export default function SettingsPage() {
               <TabsTrigger value="notifications" className="text-sm">Notifications</TabsTrigger>
               <TabsTrigger value="language" className="text-sm">Language</TabsTrigger>
               <TabsTrigger value="api-keys" className="text-sm">API Keys</TabsTrigger>
+              <TabsTrigger value="integrations" className="text-sm">Integrations</TabsTrigger>
             </TabsList>
           </ScrollArea>
           <TabsContent value="profile" className="space-y-4 md:space-y-6">
@@ -171,6 +183,9 @@ export default function SettingsPage() {
           </TabsContent>
           <TabsContent value="api-keys" className="space-y-4 md:space-y-6">
             <ApiKeysForm />
+          </TabsContent>
+          <TabsContent value="integrations" className="space-y-4 md:space-y-6">
+            <IntegrationsManager />
           </TabsContent>
         </Tabs>
       )}

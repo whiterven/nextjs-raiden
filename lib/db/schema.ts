@@ -11,6 +11,7 @@ import {
   foreignKey,
   boolean,
   integer,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -237,3 +238,39 @@ export const usage = pgTable('Usage', {
 });
 
 export type Usage = InferSelectModel<typeof usage>;
+
+export const oauthToken = pgTable('OAuthToken', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  provider: varchar('provider', { length: 50 }).notNull(), // 'google', 'linkedin', 'twitter', etc.
+  accessToken: text('accessToken').notNull(),
+  refreshToken: text('refreshToken'),
+  expiresAt: timestamp('expiresAt'),
+  scope: text('scope'),
+  tokenType: varchar('tokenType', { length: 50 }).notNull().default('Bearer'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+}, (table) => ({
+  // Unique constraint instead of primary key
+  uniqueUserProvider: uniqueIndex('user_provider_idx').on(table.userId, table.provider),
+}));
+
+export type OAuthToken = InferSelectModel<typeof oauthToken>;
+
+// Add this to store temporary OAuth state for security
+export const oauthState = pgTable('OAuthState', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  provider: varchar('provider', { length: 50 }).notNull(),
+  state: varchar('state', { length: 255 }).notNull(),
+  codeVerifier: varchar('codeVerifier', { length: 255 }), // For PKCE
+  scopes: text('scopes'),
+  expiresAt: timestamp('expiresAt').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
+export type OAuthState = InferSelectModel<typeof oauthState>;

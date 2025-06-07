@@ -39,7 +39,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'claude-3-5-sonnet',
       'groq-llama-scout',
       'groq-qwen-qwq',
-      // 'gemini-2-0-flash',
+      'gemini-2-0-flash',
       // 'mistral-small-latest',
       // 'mistral-7b-instruct',
       // 'sonar',
