@@ -176,7 +176,7 @@ export function SidebarUserNav({ user }: { user: User }) {
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => router.push('/pricing')}>
                 <Sparkles className="mr-2 size-4 w-4" />
-                Upgrade to Pro
+                Upgrade Plan
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
