@@ -76,7 +76,60 @@ export function MessageLimitWarning({ className }: MessageLimitWarningProps) {
     return () => clearInterval(interval)
   }, [])
 
-  if (!shouldShowWarning || !isVisible || messageCount === null || !session?.user) return null
+  if (!isVisible || messageCount === null || !session?.user) return null
+
+  if (isGuest) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className={`w-full ${className}`}
+        >
+          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-800 rounded-xl p-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
+                  <Sparkles className="size-3.5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 text-xs leading-tight truncate">
+                    Sign up for more messages
+                  </h3>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 truncate">
+                    Login/Signup to get more messages per day
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push("/login");
+                  }}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 text-xs py-0.5 px-2 h-6"
+                >
+                  Sign in
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={() => setIsVisible(false)}
+                >
+                  <CrossIcon size={12} />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    )
+  }
+
+  if (!shouldShowWarning) return null
 
   return (
     <AnimatePresence>
@@ -125,7 +178,7 @@ export function MessageLimitWarning({ className }: MessageLimitWarningProps) {
             </div>
           </div>
         ) : (
-          // Low messages warning
+          // Low messages warning for logged in users
           <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border border-orange-200 dark:border-orange-800 rounded-xl p-1.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1 min-w-0">
