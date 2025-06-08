@@ -265,7 +265,7 @@ function PureMultimodalInput({
           <Textarea
             ref={textareaRef}
             tabIndex={0}
-            placeholder="Send a message"
+            placeholder="Talk to BineAI..."
             className="min-h-[120px] md:min-h-[160px] py-2 md:py-3 pl-12 md:pl-14 pr-24 md:pr-32 resize-none bg-background rounded-xl border border-input"
             value={input}
             onChange={handleInput}
