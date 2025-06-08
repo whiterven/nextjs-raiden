@@ -260,55 +260,57 @@ function PureMultimodalInput({
         ))}
       </div>
 
-      <div className="relative flex flex-row items-end gap-2">
-        <Textarea
-          ref={textareaRef}
-          tabIndex={0}
-          placeholder="Send a message"
-          className="min-h-[48px] md:min-h-[60px] py-2 md:py-3 pl-12 md:pl-14 pr-24 md:pr-32 resize-none bg-background rounded-xl border border-input"
-          value={input}
-          onChange={handleInput}
-          onKeyDown={(event) => {
-            if (
-              (event.key === 'Enter' && !event.shiftKey && input.trim() && status !== 'streaming') ||
-              ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && input.trim() && status !== 'streaming')
-            ) {
-              event.preventDefault();
-              submitForm();
+      <div className="relative flex flex-col items-stretch gap-2">
+        <div className="relative">
+          <Textarea
+            ref={textareaRef}
+            tabIndex={0}
+            placeholder="Send a message"
+            className="min-h-[120px] md:min-h-[160px] py-2 md:py-3 pl-12 md:pl-14 pr-24 md:pr-32 resize-none bg-background rounded-xl border border-input"
+            value={input}
+            onChange={handleInput}
+            onKeyDown={(event) => {
+              if (
+                (event.key === 'Enter' && !event.shiftKey && input.trim() && status !== 'streaming') ||
+                ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && input.trim() && status !== 'streaming')
+              ) {
+                event.preventDefault();
+                submitForm();
+              }
+            }}
+            disabled={
+              uploadQueue.length > 0 ||
+              status === 'streaming'
             }
-          }}
-          disabled={
-            uploadQueue.length > 0 ||
-            status === 'streaming'
-          }
-          style={{ padding: width && width < 768 ? '14px 16px' : '16px 16px' }}
-        />
-
-        <div className="absolute left-2 md:left-4 bottom-1.5 md:bottom-2.5 flex items-center">
-          <AttachmentsButton
-            fileInputRef={fileInputRef}
-            status={status}
+            style={{ padding: width && width < 768 ? '14px 16px' : '16px 16px' }}
           />
-        </div>
 
-        <div className="absolute right-12 md:right-16 bottom-1.5 md:bottom-2.5 flex items-center">
-          <ModelSelector 
-            session={session} 
-            selectedModelId={selectedModelId} 
-            className="h-7 text-xs md:text-sm border-none shadow-none" 
-          />
-        </div>
-
-        <div className="absolute right-2 md:right-4 bottom-1.5 md:bottom-2.5 flex items-center">
-          {status === 'streaming' ? (
-            <StopButton stop={stop} setMessages={setMessages} />
-          ) : (
-            <SendButton
-              submitForm={submitForm}
-              input={input}
-              uploadQueue={uploadQueue}
+          <div className="absolute left-2 md:left-4 bottom-2 md:bottom-3 flex items-center">
+            <AttachmentsButton
+              fileInputRef={fileInputRef}
+              status={status}
             />
-          )}
+          </div>
+
+          <div className="absolute right-12 md:right-16 bottom-2 md:bottom-3 flex items-center">
+            <ModelSelector 
+              session={session} 
+              selectedModelId={selectedModelId} 
+              className="h-7 text-xs md:text-sm border-none shadow-none" 
+            />
+          </div>
+
+          <div className="absolute right-2 md:right-4 bottom-2 md:bottom-3 flex items-center">
+            {status === 'streaming' ? (
+              <StopButton stop={stop} setMessages={setMessages} />
+            ) : (
+              <SendButton
+                submitForm={submitForm}
+                input={input}
+                uploadQueue={uploadQueue}
+              />
+            )}
+          </div>
         </div>
       </div>
 

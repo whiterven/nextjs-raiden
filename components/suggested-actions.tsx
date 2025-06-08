@@ -19,24 +19,24 @@ function PureSuggestedActions({
 }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'What are the advantages',
-      label: 'of using Next.js?',
-      action: 'What are the advantages of using Next.js?',
+      title: 'What are the importance',
+      label: 'of using AI Agents?',
+      action: 'What are the importance of using AI Agents? can you search the web and write a detailed summary about it?',
     },
     {
       title: 'Write code to',
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
+      label: `encrypt pdf files and push to my github`,
+      action: `Write code to encrypt pdf files and push to my github`,
     },
     {
-      title: 'Help me write an essay',
-      label: `about silicon valley`,
-      action: `Help me write an essay about silicon valley`,
+      title: 'Help me write a blog post',
+      label: `about my company`,
+      action: `Help me write a blog post about my company`,
     },
     {
       title: 'What is the weather',
-      label: 'in San Francisco?',
-      action: 'What is the weather in San Francisco?',
+      label: 'in my city?',
+      action: 'What is the weather in my city?',
     },
   ];
 
