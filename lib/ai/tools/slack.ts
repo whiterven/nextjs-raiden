@@ -1,5 +1,7 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { getToolApiKey } from "@/lib/ai/tools/api-key-helper"
+import { SERVICE_CONFIGS } from "@/lib/ai/tools/api-key-helper"
 
 // Common Slack API response types
 const SlackUserSchema = z.object({
@@ -570,10 +572,25 @@ export const slackTool = tool({
     }
 
     try {
-      // Get API token from environment
-      const token = process.env.SLACK_BOT_TOKEN || process.env.SLACK_TOKEN
+      // Get API token from environment or user's stored keys
+      let token;
+      try {
+        token = await getToolApiKey(
+          SERVICE_CONFIGS.slack.serviceName,
+          SERVICE_CONFIGS.slack.envVarName
+        );
+      } catch (error) {
+        throw new Error(
+          "Slack token not found. Please add one in your settings under API Keys with " +
+          "service name 'slack' or 'SLACK_BOT_TOKEN'."
+        )
+      }
+
       if (!token) {
-        throw new Error("SLACK_BOT_TOKEN or SLACK_TOKEN not found in environment variables")
+        throw new Error(
+          "Slack token not found. Please add one in your settings under API Keys with " +
+          "service name 'slack' or 'SLACK_BOT_TOKEN'."
+        )
       }
 
       const slack = new SlackAPI(token)

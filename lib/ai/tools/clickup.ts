@@ -1,5 +1,7 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { getToolApiKey } from "@/lib/ai/tools/api-key-helper"
+import { SERVICE_CONFIGS } from "@/lib/ai/tools/api-key-helper"
 
 // ClickUp API Base URL
 const CLICKUP_API_BASE = "https://api.clickup.com/api/v2"
@@ -224,7 +226,7 @@ export const clickUpTool = tool({
   }),
   
   execute: async (params) => {
-    const { action, apiKey, onProgress } = params
+    const { action, apiKey: providedApiKey, onProgress } = params
     
     // Show loading state
     if (onProgress) {
@@ -232,9 +234,29 @@ export const clickUpTool = tool({
     }
     
     try {
+      // Get API token from provided param, environment, or user's stored keys
+      let apiKey = providedApiKey;
+      
+      if (!apiKey) {
+        try {
+          apiKey = await getToolApiKey(
+            SERVICE_CONFIGS.clickup.serviceName,
+            SERVICE_CONFIGS.clickup.envVarName
+          );
+        } catch (error) {
+          throw new Error(
+            "ClickUp API key not found. Please add one in your settings under API Keys with " +
+            "service name 'clickup' or 'CLICKUP_API_TOKEN'."
+          )
+        }
+      }
+      
       // Validate API key
       if (!apiKey) {
-        throw new Error("ClickUp API key is required")
+        throw new Error(
+          "ClickUp API key not found. Please add one in your settings under API Keys with " +
+          "service name 'clickup' or 'CLICKUP_API_TOKEN'."
+        )
       }
       
       const headers = {

@@ -1,5 +1,7 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { getToolApiKey } from "@/lib/ai/tools/api-key-helper"
+import { SERVICE_CONFIGS } from "@/lib/ai/tools/api-key-helper"
 
 // Base configuration schema
 const n8nConfigSchema = z.object({
@@ -238,9 +240,21 @@ export const n8nAPI = tool({
     }
 
     try {
+      // Check if config contains API key, if not try to get from API key helper
+      if (!config.apiKey) {
+        try {
+          config.apiKey = await getToolApiKey(
+            SERVICE_CONFIGS.n8n.serviceName,
+            SERVICE_CONFIGS.n8n.envVarName
+          );
+        } catch (error) {
+          // If we couldn't get the API key, let the validation below handle it
+        }
+      }
+
       // Validate configuration
       if (!config.baseUrl || !config.apiKey) {
-        throw new Error("n8n baseUrl and apiKey are required")
+        throw new Error("n8n baseUrl and apiKey are required. Please add an n8n API key in your settings under API Keys.")
       }
 
       // Normalize base URL

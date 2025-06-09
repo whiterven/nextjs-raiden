@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Key, Plus, Trash2 } from "lucide-react";
+import { Key, Plus, Trash2, Info } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -46,6 +46,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const apiKeyFormSchema = z.object({
   service: z
@@ -65,11 +71,20 @@ type ApiKey = {
   createdAt: string;
 };
 
+// Common service name suggestions for the form
+const SERVICE_SUGGESTIONS = [
+  { name: "github", description: "GitHub API access" },
+  { name: "GITHUB_TOKEN", description: "Alternative name for GitHub" },
+  { name: "slack", description: "Slack integration" },
+  { name: "clickup", description: "ClickUp tasks integration" },
+];
+
 export function ApiKeysForm() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState("");
   
   const form = useForm<ApiKeyFormValues>({
     resolver: zodResolver(apiKeyFormSchema),
@@ -78,6 +93,13 @@ export function ApiKeysForm() {
       key: "",
     },
   });
+
+  // Update the form with the selected suggestion
+  useEffect(() => {
+    if (selectedSuggestion) {
+      form.setValue("service", selectedSuggestion);
+    }
+  }, [selectedSuggestion, form]);
 
   // Fetch API keys on component mount
   useEffect(() => {
@@ -174,7 +196,7 @@ export function ApiKeysForm() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle>API Keys</CardTitle>
             <CardDescription>
@@ -188,13 +210,39 @@ export function ApiKeysForm() {
                 Add Key
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Add API Key</DialogTitle>
                 <DialogDescription>
                   Add a new API key for a third-party service. Keys are stored securely.
                 </DialogDescription>
               </DialogHeader>
+              
+              <div className="mt-4 mb-4">
+                <div className="text-sm font-medium mb-2">Suggested services:</div>
+                <div className="flex flex-wrap gap-2">
+                  {SERVICE_SUGGESTIONS.map((suggestion) => (
+                    <TooltipProvider key={suggestion.name}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setSelectedSuggestion(suggestion.name)}
+                            className={`text-xs ${form.getValues("service") === suggestion.name ? "bg-primary/10 border-primary" : ""}`}
+                          >
+                            {suggestion.name}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{suggestion.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))}
+                </div>
+              </div>
+              
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -204,7 +252,7 @@ export function ApiKeysForm() {
                       <FormItem>
                         <FormLabel>Service Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="OpenAI, GitHub, etc." {...field} />
+                          <Input placeholder="github, GITHUB_TOKEN, etc." {...field} />
                         </FormControl>
                         <FormDescription>
                           Name of the service this API key is for.
@@ -247,57 +295,106 @@ export function ApiKeysForm() {
               No API keys found. Add your first API key to get started.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {apiKeys.map((apiKey) => (
-                  <TableRow key={apiKey.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center">
-                        <Key className="size-4 mr-2 text-muted-foreground" />
-                        {apiKey.service}
+            <div className="overflow-hidden rounded-md border">
+              {/* Desktop view - Full table */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service</TableHead>
+                      <TableHead>Added</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {apiKeys.map((apiKey) => (
+                      <TableRow key={apiKey.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <Key className="size-4 mr-2 text-muted-foreground" />
+                            {apiKey.service}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(apiKey.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="size-8">
+                                <Trash2 className="size-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete API Key</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete the API key for {apiKey.service}? 
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => deleteApiKey(apiKey.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Mobile view - Card style list */}
+              <div className="md:hidden">
+                <div className="divide-y">
+                  {apiKeys.map((apiKey) => (
+                    <div key={apiKey.id} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <Key className="size-4 mr-2 text-muted-foreground" />
+                          <span className="font-medium">{apiKey.service}</span>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete API Key</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete the API key for {apiKey.service}? 
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteApiKey(apiKey.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(apiKey.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <Trash2 className="size-4 text-destructive" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete API Key</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete the API key for {apiKey.service}? 
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => deleteApiKey(apiKey.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <div className="text-sm text-muted-foreground">
+                        Added: {new Date(apiKey.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

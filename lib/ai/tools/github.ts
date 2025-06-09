@@ -1,5 +1,7 @@
 import { tool } from "ai"
 import { z } from "zod"
+import { getToolApiKey } from "@/lib/ai/tools/api-key-helper"
+import { SERVICE_CONFIGS } from "@/lib/ai/tools/api-key-helper"
 
 // GitHub API base URL
 const GITHUB_API_BASE = "https://api.github.com"
@@ -293,11 +295,34 @@ export const gitHub = tool({
     onProgress,
   }) => {
     try {
-      // Get token from parameter or environment variables
-      const authToken = token || process.env.GITHUB_TOKEN || process.env.GITHUB_ACCESS_TOKEN
+      // Get token using API key helper
+      let authToken: string;
+      
+      if (token) {
+        // Use provided token if available
+        authToken = token;
+      } else {
+        try {
+          // Get token from user's stored API keys or environment variable
+          authToken = await getToolApiKey(
+            SERVICE_CONFIGS.github.serviceName, 
+            SERVICE_CONFIGS.github.envVarName
+          );
+        } catch (error) {
+          throw new Error(
+            `GitHub token not found. To add one, go to Settings > API Keys and add a key with ` + 
+            `"github" or "GITHUB_TOKEN" as the service name. You can create a GitHub token at ` +
+            `https://github.com/settings/tokens with 'repo' scope.`
+          )
+        }
+      }
       
       if (!authToken) {
-        throw new Error("GitHub token is required. Provide it as a parameter or set GITHUB_TOKEN or GITHUB_ACCESS_TOKEN in environment variables.")
+        throw new Error(
+          `GitHub token not found. To add one, go to Settings > API Keys and add a key with ` +
+          `"github" or "GITHUB_TOKEN" as the service name. You can create a GitHub token at ` +
+          `https://github.com/settings/tokens with 'repo' scope.`
+        )
       }
 
       if (onProgress) {
