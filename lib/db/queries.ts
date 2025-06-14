@@ -33,6 +33,8 @@ import {
   oauthState,
   type OAuthToken,
   type OAuthState,
+  emailVerificationTokens,
+  passwordResetTokens,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
@@ -69,11 +71,14 @@ export async function getUser(email: string): Promise<Array<User>> {
         updatedAt: user.updatedAt,
         avatarUrl: user.avatarUrl ?? null,
         bio: user.bio ?? null,
-        timezone: user.timezone ?? null
+        timezone: user.timezone ?? null,
+        emailVerified: user.emailVerified ?? null
       })
       .from(user)
       .where(eq(user.email, email));
-    return users;
+    
+    // Cast to User type to ensure TypeScript is happy
+    return users as unknown as Array<User>;
   } catch (error) {
     console.error('Database error in getUser:', error);
     throw new ChatSDKError(
@@ -87,19 +92,33 @@ export async function createUser(email: string, password: string, firstName: str
   const hashedPassword = generateHashedPassword(password);
 
   try {
+    // Check if email already exists to prevent duplicates
+    const existingUsers = await getUser(email);
+    if (existingUsers.length > 0) {
+      return { success: false, error: 'Email already exists' };
+    }
+    
+    // Create the new user
     const result = await db.insert(user).values({
       email,
       password: hashedPassword,
       firstName: firstName || null,
-      lastName: lastName || null
+      lastName: lastName || null,
+      type: 'regular' as const,
+      // emailVerified is initially null until the user verifies their email
+      emailVerified: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }).returning({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
-      lastName: user.lastName
+      lastName: user.lastName,
+      type: user.type,
+      emailVerified: user.emailVerified,
     });
     
-    return result;
+    return { success: true, user: result[0] };
   } catch (error) {
     console.error('Database error in createUser:', error);
     throw new ChatSDKError('bad_request:database', 'Failed to create user');
@@ -117,7 +136,9 @@ export async function createGuestUser() {
         email,
         password,
         firstName: 'Guest',
-        lastName: 'User'
+        lastName: 'User',
+        type: 'guest',
+        emailVerified: null
       })
       .returning();
   } catch (error) {
@@ -870,6 +891,224 @@ export async function cleanupExpiredOAuthStates() {
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to cleanup expired OAuth states'
+    );
+  }
+}
+
+// Email Verification Functions
+export async function createEmailVerificationToken({
+  userId,
+  token,
+  expiresAt,
+}: {
+  userId: string;
+  token: string;
+  expiresAt: Date;
+}) {
+  try {
+    // Delete any existing tokens for this user
+    await db
+      .delete(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.userId, userId));
+    
+    // Create new token
+    return await db
+      .insert(emailVerificationTokens)
+      .values({
+        userId,
+        token,
+        expiresAt,
+      })
+      .returning();
+  } catch (error) {
+    console.error('Database error in createEmailVerificationToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to create email verification token',
+    );
+  }
+}
+
+export async function verifyEmailToken({
+  token,
+}: {
+  token: string;
+}) {
+  try {
+    // Find the token
+    const [verificationToken] = await db
+      .select()
+      .from(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.token, token));
+    
+    if (!verificationToken) {
+      return { success: false, message: 'Invalid or expired token' };
+    }
+    
+    // Check if token is expired
+    if (new Date() > verificationToken.expiresAt) {
+      await db
+        .delete(emailVerificationTokens)
+        .where(eq(emailVerificationTokens.id, verificationToken.id));
+      
+      return { success: false, message: 'Token has expired' };
+    }
+    
+    // Mark email as verified
+    await db
+      .update(user)
+      .set({ emailVerified: new Date() })
+      .where(eq(user.id, verificationToken.userId));
+    
+    // Delete the used token
+    await db
+      .delete(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.id, verificationToken.id));
+    
+    return { success: true, userId: verificationToken.userId };
+  } catch (error) {
+    console.error('Database error in verifyEmailToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to verify email token',
+    );
+  }
+}
+
+export async function isEmailVerified({
+  userId,
+}: {
+  userId: string;
+}) {
+  try {
+    const [userData] = await db
+      .select({ emailVerified: user.emailVerified })
+      .from(user)
+      .where(eq(user.id, userId));
+    
+    return { 
+      isVerified: !!userData?.emailVerified,
+      verifiedAt: userData?.emailVerified 
+    };
+  } catch (error) {
+    console.error('Database error in isEmailVerified:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to check email verification status',
+    );
+  }
+}
+
+// Password Reset Functions
+export async function createPasswordResetToken({
+  userId,
+  token,
+  expiresAt,
+}: {
+  userId: string;
+  token: string;
+  expiresAt: Date;
+}) {
+  try {
+    // Delete any existing tokens for this user
+    await db
+      .delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.userId, userId));
+    
+    // Create new token
+    return await db
+      .insert(passwordResetTokens)
+      .values({
+        userId,
+        token,
+        expiresAt,
+      })
+      .returning();
+  } catch (error) {
+    console.error('Database error in createPasswordResetToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to create password reset token',
+    );
+  }
+}
+
+export async function verifyPasswordResetToken({
+  token,
+}: {
+  token: string;
+}): Promise<{ success: boolean; message?: string; userId?: string }> {
+  try {
+    // Find the token
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    
+    if (!resetToken) {
+      return { success: false, message: 'Invalid or expired token' };
+    }
+    
+    // Check if token is expired
+    if (new Date() > resetToken.expiresAt) {
+      await db
+        .delete(passwordResetTokens)
+        .where(eq(passwordResetTokens.id, resetToken.id));
+      
+      return { success: false, message: 'Token has expired' };
+    }
+    
+    return { success: true, userId: resetToken.userId };
+  } catch (error) {
+    console.error('Database error in verifyPasswordResetToken:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to verify password reset token',
+    );
+  }
+}
+
+export async function resetPassword({
+  token,
+  newPassword,
+}: {
+  token: string;
+  newPassword: string;
+}) {
+  try {
+    // First verify the token
+    const verification = await verifyPasswordResetToken({ token });
+    
+    if (!verification.success) {
+      return verification;
+    }
+    
+    const userId = verification.userId;
+    
+    // Ensure userId is defined and a string
+    if (!userId) {
+      return { success: false, message: 'Invalid user ID' };
+    }
+    
+    const hashedPassword = generateHashedPassword(newPassword);
+    
+    // Update the password
+    await db
+      .update(user)
+      .set({ password: hashedPassword, updatedAt: new Date() })
+      .where(eq(user.id, userId));
+    
+    // Delete the used token
+    await db
+      .delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.userId, userId));
+    
+    return { success: true, message: 'Password updated successfully' };
+  } catch (error) {
+    console.error('Database error in resetPassword:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to reset password',
     );
   }
 }

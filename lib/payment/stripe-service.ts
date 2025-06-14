@@ -172,4 +172,15 @@ export class StripeService {
       throw new Error('Failed to update subscription');
     }
   }
+
+  async getSubscription(subscriptionId: string) {
+    try {
+      return await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items.data.price'],
+      });
+    } catch (error) {
+      console.error('Error retrieving subscription:', error);
+      throw new Error('Failed to retrieve subscription details');
+    }
+  }
 } 

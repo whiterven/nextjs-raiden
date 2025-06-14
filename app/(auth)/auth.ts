@@ -1,3 +1,4 @@
+//app/(auth)/auth.ts
 import { compare } from 'bcrypt-ts';
 import NextAuth, { type DefaultSession } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
@@ -5,6 +6,7 @@ import { createGuestUser, getUser } from '@/lib/db/queries';
 import { authConfig } from './auth.config';
 import { DUMMY_PASSWORD } from '@/lib/constants';
 import type { DefaultJWT } from 'next-auth/jwt';
+import { sendWelcomeEmail, sendVerificationEmail } from '@/lib/email/utils';
 
 export type UserType = 'guest' | 'regular' | 'advanced' | 'expert';
 
@@ -15,6 +17,7 @@ declare module 'next-auth' {
       type: UserType;
       firstName?: string;
       lastName?: string;
+      emailVerified?: Date | null; // Changed to allow null
     } & DefaultSession['user'];
   }
 
@@ -24,6 +27,7 @@ declare module 'next-auth' {
     type: UserType;
     firstName?: string;
     lastName?: string;
+    emailVerified?: Date | null; // Changed to allow null
   }
 }
 
@@ -33,6 +37,7 @@ declare module 'next-auth/jwt' {
     type: UserType;
     firstName?: string;
     lastName?: string;
+    emailVerified?: Date | null; // Changed to allow null
   }
 }
 
@@ -68,9 +73,10 @@ export const {
         return {
           id: user.id,
           email: user.email,
-          type: 'regular' as const,
+          type: user.type,
           firstName: user.firstName || undefined,
-          lastName: user.lastName || undefined
+          lastName: user.lastName || undefined,
+          emailVerified: user.emailVerified || null // Explicitly handle null
         };
       },
     }),
@@ -83,8 +89,9 @@ export const {
           id: guestUser.id,
           email: guestUser.email,
           type: 'guest' as const,
-          firstName: undefined,
-          lastName: undefined
+          firstName: guestUser.firstName || undefined,
+          lastName: guestUser.lastName || undefined,
+          emailVerified: null // Set to null for guest users
         };
       },
     }),
@@ -96,6 +103,7 @@ export const {
         token.type = user.type;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
+        token.emailVerified = user.emailVerified;
       }
 
       return token;
@@ -106,9 +114,31 @@ export const {
         session.user.type = token.type;
         session.user.firstName = token.firstName;
         session.user.lastName = token.lastName;
+        session.user.emailVerified = token.emailVerified ?? null;
       }
 
       return session;
+    },
+  },
+  events: {
+    async createUser({ user }) {
+      // Don't send emails for guest users
+      if (user.type === 'guest' || !user.email) return;
+      
+      const baseUrl = process.env.NEXTAUTH_URL;
+      if (!baseUrl) {
+        console.error('NEXTAUTH_URL environment variable is not defined');
+        return;
+      }
+      
+      // Send welcome email
+      const name = user.firstName || user.email.split('@')[0];
+      await sendWelcomeEmail(user.email, name);
+      
+      // Send verification email
+      if (user.id) {
+        await sendVerificationEmail(user.id, user.email, name, baseUrl);
+      }
     },
   },
 });

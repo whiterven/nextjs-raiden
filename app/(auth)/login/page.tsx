@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useActionState, useEffect, useState, useRef, Suspense } from 'react';
 import { toast } from '@/components/toast';
 
 import { AuthForm } from '@/components/auth-form';
@@ -11,8 +11,12 @@ import { SubmitButton } from '@/components/submit-button';
 import { login, type LoginActionState } from '../actions';
 import { useSession } from 'next-auth/react';
 
-export default function Page() {
+// Client component that uses searchParams
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams?.get('verified') === 'true';
+  const error = searchParams?.get('error');
 
   const [email, setEmail] = useState('');
   const [isSuccessful, setIsSuccessful] = useState(false);
@@ -26,6 +30,28 @@ export default function Page() {
   );
 
   const { update: updateSession } = useSession();
+
+  useEffect(() => {
+    if (verified && !hasShownMessage.current) {
+      hasShownMessage.current = true;
+      toast({
+        type: 'success',
+        description: 'Your email has been verified! You can now log in.',
+      });
+    }
+
+    if (error && !hasShownMessage.current) {
+      hasShownMessage.current = true;
+      toast({
+        type: 'error',
+        description: error === 'invalid-token' 
+          ? 'Invalid verification token.'
+          : error === 'verification-failed'
+            ? 'Email verification failed. Please try again.'
+            : 'An error occurred during verification.',
+      });
+    }
+  }, [verified, error]);
 
   useEffect(() => {
     if (!hasShownMessage.current) {
@@ -74,16 +100,24 @@ export default function Page() {
 
         <AuthForm action={handleSubmit} defaultEmail={email}>
           <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
-          <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
-            {"Don't have an account? "}
+          <div className="flex flex-col items-center gap-4 mt-4">
             <Link
-              href="/register"
-              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              href="/forgot-password"
+              className="text-sm text-gray-600 hover:underline dark:text-zinc-400"
             >
-              Sign up
+              Forgot password?
             </Link>
-            {' for free.'}
-          </p>
+            <p className="text-center text-sm text-gray-600 dark:text-zinc-400">
+              {"Don't have an account? "}
+              <Link
+                href="/register"
+                className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              >
+                Sign up
+              </Link>
+              {' for free.'}
+            </p>
+          </div>
           <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
             By clicking Log In, you agree to our{' '}
             <Link
@@ -104,5 +138,25 @@ export default function Page() {
         </AuthForm>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function LoginLoading() {
+  return (
+    <div className="flex min-h-dvh w-full items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl flex flex-col gap-12 items-center">
+        <div className="animate-pulse w-32 h-8 bg-gray-200 rounded dark:bg-zinc-800"></div>
+        <div className="animate-pulse w-64 h-64 bg-gray-200 rounded-lg dark:bg-zinc-800"></div>
+      </div>
+    </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginContent />
+    </Suspense>
   );
 }

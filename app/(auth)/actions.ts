@@ -93,7 +93,7 @@ export const register = async (
         validatedData.lastName
       );
 
-      if (!newUser || newUser.length === 0) {
+      if (!newUser || !newUser.success || !newUser.user) {
         console.error('User creation failed - no user returned');
         return { status: 'failed' };
       }

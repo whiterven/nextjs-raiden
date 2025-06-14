@@ -31,6 +31,7 @@ export const user = pgTable('User', {
   timezone: varchar('timezone', { length: 50 }),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  emailVerified: timestamp('emailVerified'),
 });
 
 export const securedApiKey = pgTable('SecuredApiKey', {
@@ -135,7 +136,7 @@ export const document = pgTable(
     createdAt: timestamp('createdAt').notNull(),
     title: text('title').notNull(),
     content: text('content'),
-    kind: varchar('text', { enum: ['text', 'code', 'image', 'sheet', 'chart'] })
+    kind: varchar('text', { enum: ['text', 'code', 'image', 'sheet', 'slide','chart'] })
       .notNull()
       .default('text'),
     userId: uuid('userId')
@@ -274,3 +275,21 @@ export const oauthState = pgTable('OAuthState', {
 });
 
 export type OAuthState = InferSelectModel<typeof oauthState>;
+
+// Schema for email verification tokens
+export const emailVerificationTokens = pgTable('EmailVerificationToken', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  token: varchar('token', { length: 255 }).notNull(),
+  expiresAt: timestamp('expiresAt').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
+// Schema for password reset tokens
+export const passwordResetTokens = pgTable('PasswordResetToken', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  token: varchar('token', { length: 255 }).notNull(),
+  expiresAt: timestamp('expiresAt').notNull(),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});

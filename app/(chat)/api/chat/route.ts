@@ -189,7 +189,7 @@ export async function POST(request: Request) {
               'gitHub',
               // 'fileManager',
               // 'slackTool',
-              'getDateTime',
+              // 'getDateTime',
               'searchWeb',
               'createDocument',
               'updateDocument',

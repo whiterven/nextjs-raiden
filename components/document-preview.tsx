@@ -22,10 +22,11 @@ import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
 import { ChartVisualization } from './chart-visualization';
+import { SlideEditor } from './slide-editor';
 
 // Extend Document type to include 'chart' kind until the schema update is fully propagated
 type DocumentWithChart = Omit<Document, 'kind'> & {
-  kind: 'text' | 'code' | 'image' | 'sheet' | 'chart';
+  kind: 'text' | 'code' | 'image' | 'sheet' | 'chart' | 'slide';
 };
 
 interface DocumentPreviewProps {
@@ -114,7 +115,7 @@ export function DocumentPreview({
       />
       <DocumentHeader
         title={document.title}
-        kind={document.kind}
+        kind={document.kind as ArtifactKind}
         isStreaming={artifact.status === 'streaming'}
       />
       <DocumentContent document={document} />
@@ -295,6 +296,12 @@ const DocumentContent = ({ document }: { document: DocumentWithChart }) => {
               saveContent={() => {}}
               status={artifact.status}
             />
+          </div>
+        </div>
+      ) : document.kind === 'slide' ? (
+        <div className="flex flex-1 relative size-full p-4">
+          <div className="absolute inset-0">
+            <SlideEditor {...commonProps} />
           </div>
         </div>
       ) : null}
