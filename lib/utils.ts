@@ -3,7 +3,6 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { Document } from '@/lib/db/schema';
 import { ChatSDKError, type ErrorCode } from './errors';
-import { nanoid } from 'nanoid';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -50,21 +49,11 @@ export function getLocalStorage(key: string) {
 }
 
 export function generateUUID(): string {
-  return nanoid();
-}
-
-/**
- * Format a number as currency
- * @param amount - The amount to format
- * @param currency - The currency code (e.g., 'usd')
- * @returns Formatted currency string
- */
-export function formatCurrency(amount: number, currency: string = 'usd'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: 2
-  }).format(amount);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;
@@ -100,3 +89,17 @@ export function getTrailingMessageId({
 export function sanitizeText(text: string) {
   return text.replace('<has_function_call>', '');
 }
+
+/**
+* Format a number as currency
+* @param amount - The amount to format
+* @param currency - The currency code (e.g., 'usd')
+* @returns Formatted currency string
+*/
+export function formatCurrency(amount: number, currency: string = 'usd'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 2
+  }).format(amount);
+ }
