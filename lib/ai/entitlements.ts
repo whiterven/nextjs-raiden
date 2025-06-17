@@ -17,7 +17,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'groq-deepseek-r1',
       'groq-llama-scout',
       'gemini-2-0-flash',
-      'mistral-small-latest',
+      // 'mistral-small-latest',
       // 'sonar',
     ],
     // canUseTools: false,
@@ -29,17 +29,19 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users with a free account (Regular)
    */
   regular: {
-    maxMessagesPerDay: 20,
+    maxMessagesPerDay: 5,
     availableChatModelIds: [
       // Basic Models
       'groq-deepseek-r1',
       'openai-o1',
+      'openai-o1-mini',
       // 'grok-2-vision',
       // 'grok-3-mini',
       'claude-3-5-sonnet',
       'groq-llama-scout',
       'groq-qwen-qwq',
       'gemini-2-0-flash',
+      'gemini-2-5-flash-preview',
       // 'mistral-small-latest',
       // 'mistral-7b-instruct',
       // 'sonar',
@@ -50,7 +52,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users with Advanced plan ($19/month)
    */
   advanced: {
-    maxMessagesPerDay: 100,
+    maxMessagesPerDay: 50,
     availableChatModelIds: [
       // Basic Models
       // 'grok-2-vision',
@@ -63,14 +65,16 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       // Advanced Models
       'groq-llama-scout',
       'groq-qwen-qwq',
+      //gemini Models
       'gemini-2-0-flash',
+      'gemini-2-5-flash-preview',
       'claude-3-5-sonnet',
       'claude-3-7-sonnet',
       'openai-o1',
       'openai-o3',
-      'mistral-large-latest',
-      'mistral-small-latest',
-      'pixtral-large-latest',
+      // 'mistral-large-latest',
+      // 'mistral-small-latest',
+      // 'pixtral-large-latest',
       'sonar',
       'sonar-pro',
       'mixtral-8x22b-instruct',
@@ -82,7 +86,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    * For users with Expert plan ($41/month)
    */
   expert: {
-    maxMessagesPerDay: -1, // Unlimited
+    maxMessagesPerDay: 200, // Unlimited
     availableChatModelIds: [
       // Grok Models
       // 'grok-2-vision',
@@ -113,9 +117,9 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'openai-o1-mini',
       'openai-o1-preview',
       // Mistral Models
-      'pixtral-large-latest',
-      'mistral-large-latest',
-      'mistral-small-latest',
+      // 'pixtral-large-latest',
+      // 'mistral-large-latest',
+      // 'mistral-small-latest',
       // Perplexity Models
       'sonar-pro',
       'sonar',
