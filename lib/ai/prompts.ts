@@ -381,7 +381,8 @@ export const updateDocumentPrompt = (currentContent: string | null, type: Artifa
     code: "Upgrade to production-grade code with advanced features, comprehensive error handling, security considerations, performance optimizations, and enterprise-ready architecture.",
     sheet: "Evolve into a sophisticated spreadsheet with advanced formulas, data validation, professional formatting, analytical insights, and business intelligence capabilities.",
     image: "Enhance the image with advanced editing features, generate new images, or integrate with image processing capabilities.",
-    chart: "Enhance the chart with advanced visualization techniques, add new data dimensions, improve interactivity, and provide deeper analytical insights."
+    chart: "Enhance the chart with advanced visualization techniques, add new data dimensions, improve interactivity, and provide deeper analytical insights.",
+    slide: "Transform into a comprehensive presentation with a compelling narrative, professional design, interactive elements, and actionable insights.",
   }
 
   return `${basePrompt}\\n\\n${currentContent}\\n\\nSPECIFIC ENHANCEMENT DIRECTION:\\n${typeSpecificGuidance[type]}`
