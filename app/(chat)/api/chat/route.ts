@@ -29,6 +29,8 @@ import { searchWeb } from '@/lib/ai/tools/search-web';
 import { gitHub } from '@/lib/ai/tools/github';
 import { fileManager } from '@/lib/ai/tools/file-manager';
 import { slackTool } from '@/lib/ai/tools/slack';
+import { clickupTool } from '@/lib/ai/tools/clickup';
+import { n8nAPI } from '@/lib/ai/tools/n8n-automation';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -181,14 +183,14 @@ export async function POST(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 10,
+          maxSteps: 20,
           experimental_activeTools:
             // ALL models now have access to artifacts and tools
             [
               'getWeather',
               'gitHub',
               // 'fileManager',
-              // 'slackTool',
+              'slackTool',
               // 'getDateTime',
               'searchWeb',
               'createDocument',

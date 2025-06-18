@@ -25,9 +25,9 @@ export function MessageLimitWarning({ className }: MessageLimitWarningProps) {
 
   // Message limits based on user type
   const limits = {
-    guest: 2,
-    regular: 20, // Free plan
-    pro: 100,
+    guest: 1,
+    regular: 5, // Free plan
+    pro: 50,
     expert: 500,
   }
 
