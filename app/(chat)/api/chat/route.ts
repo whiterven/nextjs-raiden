@@ -187,7 +187,7 @@ export async function POST(request: Request) {
           experimental_activeTools:
             // ALL models now have access to artifacts and tools
             [
-              'getWeather',
+              //'getWeather',
               'gitHub',
               // 'fileManager',
               'slackTool',
